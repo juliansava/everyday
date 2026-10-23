@@ -111,7 +111,19 @@ describe('suggestions', () => {
       c.exerciseId === 'single-arm-swing' ? { ...c, weightKg: 16, repsPerSide: 15 } : c,
     );
     const h = history(kbSession(top), kbSession(top));
-    expect(suggestions(h, BELLS, 90)).toContainEqual({ kind: 'ladder-end', slot: 'swing' });
+    expect(suggestions(h, BELLS, 90)).toContainEqual({
+      kind: 'ladder-end', slot: 'swing',
+      current: { exerciseId: 'single-arm-swing', weightKg: 16, repsPerSide: 15 },
+    });
+  });
+
+  it('names the exercise on the ladder end, here the overhead windmill', () => {
+    const overhead: CircuitEntry[] = DEFAULT_CIRCUIT.map((c) =>
+      c.exerciseId === 'low-windmill' ? { exerciseId: 'overhead-windmill', weightKg: 16, repsPerSide: 15 } : c,
+    );
+    const h = history(kbSession(overhead), kbSession(overhead));
+    expect(suggestions(h, BELLS, 90).filter((s) => s.kind === 'ladder-end').map(describeSuggestion))
+      .toEqual(['Windmill: ready for a heavier bell']);
   });
 
   it('suggests shorter rest once every exercise is at the heaviest bell', () => {
@@ -131,13 +143,34 @@ describe('suggestions', () => {
       .some((s) => s.kind === 'rest')).toBe(false);
   });
 
+  it('needs both of the last two sessions fully at the top bell before suggesting shorter rest', () => {
+    const top: CircuitEntry[] = [
+      { exerciseId: 'single-arm-swing', weightKg: 16, repsPerSide: 12 },
+      { exerciseId: 'clean-and-press', weightKg: 16, repsPerSide: 10 },
+      { exerciseId: 'overhead-windmill', weightKg: 16, repsPerSide: 10 },
+      { exerciseId: 'renegade-row-push-up', weightKg: 16, repsPerSide: 5 },
+    ];
+    const renegadeAt12: CircuitEntry[] = top.map((c) =>
+      c.exerciseId === 'renegade-row-push-up' ? { ...c, weightKg: 12 } : c,
+    );
+    // One all-top session after a clean session with renegade rows at 12 kg is not enough yet.
+    expect(suggestions(history(kbSession(renegadeAt12), kbSession(top)), BELLS, 90)
+      .some((s) => s.kind === 'rest')).toBe(false);
+    // A second all-top clean session makes the last two both fully at the top.
+    expect(suggestions(history(kbSession(renegadeAt12), kbSession(top), kbSession(top)), BELLS, 90))
+      .toContainEqual({ kind: 'rest', fromSec: 90, toSec: 75 });
+  });
+
   it('describes suggestions in plain words', () => {
     expect(describeSuggestion({
       kind: 'step', slot: 'swing',
       from: { exerciseId: 'single-arm-swing', weightKg: 12, repsPerSide: 10 },
       to: { exerciseId: 'single-arm-swing', weightKg: 16, repsPerSide: 10 },
     })).toBe('Single-arm swing: move up to 16 kg × 10 per side');
-    expect(describeSuggestion({ kind: 'ladder-end', slot: 'press' }))
+    expect(describeSuggestion({
+      kind: 'ladder-end', slot: 'press',
+      current: { exerciseId: 'clean-and-press', weightKg: 16, repsPerSide: 15 },
+    }))
       .toBe('Clean and press: ready for a heavier bell');
     expect(describeSuggestion({ kind: 'rest', fromSec: 90, toSec: 75 }))
       .toBe('Rest between rounds: cut to 75 s');

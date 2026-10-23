@@ -131,7 +131,7 @@ export function currentCircuit(history: KbHistoryItem[], bellsKg: number[]): Cir
 
 export type Suggestion =
   | { kind: 'step'; slot: SlotId; from: CircuitEntry; to: CircuitEntry }
-  | { kind: 'ladder-end'; slot: SlotId }
+  | { kind: 'ladder-end'; slot: SlotId; current: CircuitEntry }
   | { kind: 'rest'; fromSec: RoundRest; toSec: RoundRest };
 
 export function suggestions(history: KbHistoryItem[], bellsKg: number[], roundRestSec: RoundRest): Suggestion[] {
@@ -140,18 +140,26 @@ export function suggestions(history: KbHistoryItem[], bellsKg: number[], roundRe
     const { step, count } = cleanCount(slot, history);
     if (!step || count < 2) continue;
     const to = nextStep(slot, step, bellsKg);
-    out.push(to ? { kind: 'step', slot, from: step, to } : { kind: 'ladder-end', slot });
+    out.push(to ? { kind: 'step', slot, from: step, to } : { kind: 'ladder-end', slot, current: step });
   }
 
   const top = Math.max(...bellsKg);
   const circuit = currentCircuit(history, bellsKg);
   const allAtTop = circuit.every((c) => c.weightKg >= top && c.exerciseId !== 'low-windmill');
   const lastTwo = history.slice(-2);
-  const lastTwoClean =
+  // Both of the last two sessions must be clean at the current step for every slot, i.e. fully at the top bell.
+  const lastTwoAtTop =
     lastTwo.length === 2 &&
-    lastTwo.every((item) => item.session.params.roundRestSec === roundRestSec && SLOTS.every((s) => isClean(s, item)));
+    lastTwo.every(
+      (item) =>
+        item.session.params.roundRestSec === roundRestSec &&
+        SLOTS.every((slot, k) => {
+          const used = stepUsed(slot, item);
+          return used !== null && sameStep(used, circuit[k]) && isClean(slot, item);
+        }),
+    );
   const i = REST_STEPS.indexOf(roundRestSec);
-  if (allAtTop && lastTwoClean && i >= 0 && i < REST_STEPS.length - 1) {
+  if (allAtTop && lastTwoAtTop && i >= 0 && i < REST_STEPS.length - 1) {
     out.push({ kind: 'rest', fromSec: roundRestSec, toSec: REST_STEPS[i + 1] });
   }
   return out;
@@ -163,8 +171,7 @@ export function applyStep(circuit: CircuitEntry[], s: Extract<Suggestion, { kind
 
 export function describeSuggestion(s: Suggestion): string {
   if (s.kind === 'rest') return `Rest between rounds: cut to ${s.toSec} s`;
-  const name = EXERCISES[SLOT_EXERCISES[s.slot][0]].name;
-  if (s.kind === 'ladder-end') return `${name}: ready for a heavier bell`;
+  if (s.kind === 'ladder-end') return `${EXERCISES[s.current.exerciseId].name}: ready for a heavier bell`;
   const toName = EXERCISES[s.to.exerciseId].name;
   const what = s.to.exerciseId !== s.from.exerciseId ? `switch to ${toName}` : 'move up';
   return `${EXERCISES[s.from.exerciseId].name}: ${what} to ${s.to.weightKg} kg × ${s.to.repsPerSide} per side`;
