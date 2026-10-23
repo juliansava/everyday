@@ -76,4 +76,24 @@ describe('store', () => {
     expect(await store.allSets()).toEqual([]);
     expect((await store.getSettings()).maxHr).toBe(190);
   });
+
+  it('keeps the old data when an import has a keyless record', async () => {
+    const store = await fresh();
+    await store.saveSettings({ ...DEFAULT_SETTINGS, maxHr: 180 });
+    await store.putSession(session({ id: 'old' }));
+    await store.addSet(set({ id: 'old-set', sessionId: 'old' }));
+    await store.putTrace({ sessionId: 'old', startedAt: 1000, bpm: [120] });
+    await expect(
+      store.replaceAll({
+        settings: { ...DEFAULT_SETTINGS, maxHr: 190 },
+        sessions: [session({ id: 'new' }), { startedAt: 6 } as SessionRecord],
+        sets: [],
+        traces: [],
+      }),
+    ).rejects.toMatchObject({ name: 'DataError' });
+    expect((await store.listSessions()).map((s) => s.id)).toEqual(['old']);
+    expect((await store.allSets()).map((s) => s.id)).toEqual(['old-set']);
+    expect((await store.getTrace('old'))?.bpm).toEqual([120]);
+    expect((await store.getSettings()).maxHr).toBe(180);
+  });
 });

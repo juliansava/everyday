@@ -79,17 +79,31 @@ export async function openStore(name = 'everyday'): Promise<Store> {
     allTraces: () => db.getAll('hrTraces'),
     async replaceAll(data) {
       const tx = db.transaction(['settings', 'sessions', 'sets', 'hrTraces'], 'readwrite');
-      await Promise.all([
-        tx.objectStore('settings').clear(),
-        tx.objectStore('sessions').clear(),
-        tx.objectStore('sets').clear(),
-        tx.objectStore('hrTraces').clear(),
-      ]);
-      await tx.objectStore('settings').put(data.settings, SETTINGS_KEY);
-      for (const s of data.sessions) await tx.objectStore('sessions').put(s);
-      for (const s of data.sets) await tx.objectStore('sets').put(s);
-      for (const t of data.traces) await tx.objectStore('hrTraces').put(t);
-      await tx.done;
+      // idb creates `done` eagerly; this stops an early abort from being reported as unhandled.
+      tx.done.catch(() => {});
+      try {
+        await Promise.all([
+          tx.objectStore('settings').clear(),
+          tx.objectStore('sessions').clear(),
+          tx.objectStore('sets').clear(),
+          tx.objectStore('hrTraces').clear(),
+        ]);
+        await tx.objectStore('settings').put(data.settings, SETTINGS_KEY);
+        for (const s of data.sessions) await tx.objectStore('sessions').put(s);
+        for (const s of data.sets) await tx.objectStore('sets').put(s);
+        for (const t of data.traces) await tx.objectStore('hrTraces').put(t);
+        await tx.done;
+      } catch (error) {
+        // Roll back so a bad record leaves the old data in place. A failed request has
+        // already aborted the transaction, in which case abort() throws and is ignored.
+        try {
+          tx.abort();
+        } catch {
+          // Already finished.
+        }
+        await tx.done.catch(() => {});
+        throw error;
+      }
     },
   };
 }
