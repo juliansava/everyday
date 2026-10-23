@@ -10,6 +10,7 @@ import { staleInProgress } from '../progress/session';
 import { TabBar } from './components/TabBar';
 import { DataContext, type AppData, type Route } from './data';
 import { Gallery } from './screens/Gallery';
+import { MorningPlayer } from './screens/MorningPlayer';
 import { Today } from './screens/Today';
 
 interface Loaded {
@@ -143,6 +144,8 @@ export function App() {
 function renderRoute(route: Route) {
   switch (route.name) {
     // Later tasks add one case per screen here.
+    case 'morning':
+      return <MorningPlayer key={route.sessionId} sessionId={route.sessionId} next={route.next} />;
     default:
       return <Today />;
   }
