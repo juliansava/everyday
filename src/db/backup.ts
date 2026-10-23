@@ -24,6 +24,64 @@ export async function exportBackup(store: Store, now = Date.now()): Promise<Back
   return { app: 'everyday', version: BACKUP_VERSION, exportedAt: now, settings, sessions, sets, traces };
 }
 
+const SESSION_KINDS: readonly string[] = ['morning', 'kb', 'z2', 'z5'];
+
+function isObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function isFiniteNumber(value: unknown): value is number {
+  return typeof value === 'number' && Number.isFinite(value);
+}
+
+/** A YYYY-MM-DD string that is a real calendar date (2026-02-30 is not). */
+function isValidDate(value: unknown): boolean {
+  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const [year, month, day] = value.split('-').map(Number);
+  const date = new Date(0);
+  date.setUTCFullYear(year, month - 1, day);
+  return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day;
+}
+
+function isValidSettings(value: unknown): boolean {
+  return isObject(value) && isFiniteNumber(value.maxHr);
+}
+
+function isValidSession(value: unknown): boolean {
+  return (
+    isObject(value) &&
+    typeof value.id === 'string' &&
+    typeof value.kind === 'string' &&
+    SESSION_KINDS.includes(value.kind) &&
+    isValidDate(value.plannedDate) &&
+    isFiniteNumber(value.startedAt) &&
+    isFiniteNumber(value.stepIndex) &&
+    isObject(value.params)
+  );
+}
+
+function isValidSet(value: unknown): boolean {
+  return (
+    isObject(value) &&
+    typeof value.id === 'string' &&
+    typeof value.sessionId === 'string' &&
+    typeof value.exerciseId === 'string' &&
+    isFiniteNumber(value.round) &&
+    isFiniteNumber(value.repsPerSide) &&
+    isFiniteNumber(value.plannedRepsPerSide)
+  );
+}
+
+function isValidTrace(value: unknown): boolean {
+  return (
+    isObject(value) &&
+    typeof value.sessionId === 'string' &&
+    isFiniteNumber(value.startedAt) &&
+    Array.isArray(value.bpm) &&
+    value.bpm.every(isFiniteNumber)
+  );
+}
+
 export function parseBackup(text: string): Backup {
   let data: Partial<Backup> | null;
   try {
@@ -37,6 +95,14 @@ export function parseBackup(text: string): Backup {
   }
   if (!data.settings || !Array.isArray(data.sessions) || !Array.isArray(data.sets) || !Array.isArray(data.traces)) {
     throw new Error('This backup is incomplete.');
+  }
+  if (
+    !isValidSettings(data.settings) ||
+    !data.sessions.every(isValidSession) ||
+    !data.sets.every(isValidSet) ||
+    !data.traces.every(isValidTrace)
+  ) {
+    throw new Error('This backup has damaged entries.');
   }
   return data as Backup;
 }

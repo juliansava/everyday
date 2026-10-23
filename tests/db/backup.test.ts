@@ -65,6 +65,56 @@ describe('backup', () => {
     ).toBe('2 sessions from 2026-10-19 to 2026-11-02');
   });
 
+  describe('damaged entries', () => {
+    const damaged = 'This backup has damaged entries.';
+    const backupWith = (over: Record<string, unknown>) =>
+      JSON.stringify({
+        app: 'everyday', version: BACKUP_VERSION, exportedAt: 1,
+        settings: DEFAULT_SETTINGS, sessions: [], sets: [], traces: [], ...over,
+      });
+
+    it('rejects a session with a bad plannedDate', () => {
+      expect(() => parseBackup(backupWith({ sessions: [session('s1', 'garbage', 1)] }))).toThrow(damaged);
+      expect(() => parseBackup(backupWith({ sessions: [session('s1', '2026-02-30', 1)] }))).toThrow(damaged);
+    });
+
+    it('rejects a session without startedAt', () => {
+      const noStartedAt = {
+        id: 's1', kind: 'morning', plannedDate: '2026-10-19', status: 'done', stepIndex: 0, params: {},
+      };
+      expect(() => parseBackup(backupWith({ sessions: [noStartedAt] }))).toThrow(damaged);
+    });
+
+    it('rejects a null session', () => {
+      expect(() => parseBackup(backupWith({ sessions: [null] }))).toThrow(damaged);
+    });
+
+    it('rejects a set without a sessionId', () => {
+      const noSessionId = {
+        id: 'x', exerciseId: 'halo', block: 'warmup', round: 1,
+        repsPerSide: 10, plannedRepsPerSide: 10, weightKg: null, at: 3,
+      };
+      expect(() => parseBackup(backupWith({ sets: [noSessionId] }))).toThrow(damaged);
+    });
+
+    it('rejects settings without a maxHr', () => {
+      expect(() => parseBackup(backupWith({ settings: {} }))).toThrow(damaged);
+    });
+
+    it('still accepts a valid backup from exportBackup', async () => {
+      const store = await openStore('backup-valid');
+      await store.putSession(session('s1', '2026-10-19', 1));
+      await store.addSet({
+        id: 'x', sessionId: 's1', exerciseId: 'halo', block: 'warmup', round: 1,
+        repsPerSide: 10, plannedRepsPerSide: 10, weightKg: null, at: 3,
+      });
+      await store.putTrace({ sessionId: 's1', startedAt: 1, bpm: [120, 0, 130] });
+      const parsed = parseBackup(JSON.stringify(await exportBackup(store, 5)));
+      expect(parsed.sessions.map((s) => s.id)).toEqual(['s1']);
+      expect(parsed.traces[0].bpm).toEqual([120, 0, 130]);
+    });
+  });
+
   it('names the file after the date', () => {
     expect(backupFileName(new Date(2026, 9, 23))).toBe('everyday-backup-2026-10-23.json');
   });
