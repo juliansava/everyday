@@ -113,7 +113,8 @@ export function weeklyZone2Minutes(
   sessions: SessionRecord[],
   weeks = 12,
 ): { weekStart: string; minutes: number }[] {
-  const rides = finished(sessions, 'z2');
+  // Partial rides count their time in zone; only rides still in progress are left out.
+  const rides = sessions.filter((s) => s.kind === 'z2' && s.status !== 'in_progress');
   const current = weekStart(today);
   return Array.from({ length: weeks }, (_, i) => {
     const ws = addDays(current, -7 * (weeks - 1 - i));

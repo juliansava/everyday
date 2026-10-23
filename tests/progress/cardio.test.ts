@@ -103,6 +103,14 @@ describe('cardio trends', () => {
     ]);
   });
 
+  it('counts partial zone 2 rides in the weekly minutes but not rides still in progress', () => {
+    const sessions = [
+      ride({ plannedDate: '2026-10-20', status: 'partial', summary: { timeInZoneSec: 2400, zone2Share: 0.9 } }),
+      ride({ plannedDate: '2026-10-21', status: 'in_progress', summary: { timeInZoneSec: 600 } }),
+    ];
+    expect(weeklyZone2Minutes('2026-10-23', sessions, 1)).toEqual([{ weekStart: '2026-10-19', minutes: 40 }]);
+  });
+
   it('lists the zone 2 block length and zone 5 peaks and recovery per ride', () => {
     const sessions = [
       ride({ plannedDate: '2026-10-20' }),
