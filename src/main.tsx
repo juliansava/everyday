@@ -1,3 +1,5 @@
 import { render } from 'preact';
+import { App } from './ui/App';
+import './ui/styles.css';
 
-render(<p>Everyday</p>, document.getElementById('app')!);
+render(<App />, document.getElementById('app')!);
