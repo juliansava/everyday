@@ -16,11 +16,13 @@ function setup(opts: { remembered?: string } = {}) {
     getPrimaryService: vi.fn(async () => ({ getCharacteristic: vi.fn(async () => ch) })),
   };
   let connectFails = false;
+  let connectGate: Promise<void> | undefined;
   const device = Object.assign(new EventTarget(), {
     id: 'strap-1',
     gatt: {
       connect: vi.fn(async () => {
         if (connectFails) throw new Error('out of range');
+        if (connectGate) await connectGate;
         return server;
       }),
       disconnect: vi.fn(),
@@ -38,7 +40,23 @@ function setup(opts: { remembered?: string } = {}) {
     },
   };
   const source = createBluetoothSource(memory, bt as unknown as Bluetooth);
-  return { source, bt, device, ch, memory, failConnect: (v: boolean) => (connectFails = v) };
+  return {
+    source,
+    bt,
+    device,
+    ch,
+    memory,
+    failConnect: (v: boolean) => (connectFails = v),
+    holdConnect: (gate?: Promise<void>) => (connectGate = gate),
+  };
+}
+
+function deferred() {
+  let resolve!: () => void;
+  const promise = new Promise<void>((r) => {
+    resolve = () => r(undefined);
+  });
+  return { promise, resolve };
 }
 
 beforeEach(() => vi.useFakeTimers());
@@ -102,5 +120,50 @@ describe('Bluetooth heart-rate source', () => {
     bt.requestDevice.mockRejectedValueOnce(new Error('User cancelled'));
     await expect(source.connect({ pick: true })).rejects.toThrow('User cancelled');
     expect(source.status()).toBe('idle');
+  });
+
+  it('disconnect() during an in-flight connect() stays idle and closes the late link', async () => {
+    const { source, device, holdConnect } = setup();
+    const gate = deferred();
+    holdConnect(gate.promise);
+    const pending = source.connect({ pick: true });
+    await vi.advanceTimersByTimeAsync(0);
+    expect(device.gatt.connect).toHaveBeenCalledTimes(1);
+    source.disconnect();
+    expect(source.status()).toBe('idle');
+    expect(device.gatt.disconnect).toHaveBeenCalledTimes(1);
+    gate.resolve();
+    await pending;
+    expect(source.status()).toBe('idle');
+    expect(device.gatt.disconnect).toHaveBeenCalledTimes(2);
+  });
+
+  it('a retry that completes after disconnect() stays idle and closes its link', async () => {
+    const { source, device, holdConnect } = setup();
+    await source.connect({ pick: true });
+    device.dispatchEvent(new Event('gattserverdisconnected'));
+    expect(source.status()).toBe('reconnecting');
+    const gate = deferred();
+    holdConnect(gate.promise);
+    await vi.advanceTimersByTimeAsync(RETRY_MS);
+    expect(device.gatt.connect).toHaveBeenCalledTimes(2);
+    source.disconnect();
+    expect(source.status()).toBe('idle');
+    gate.resolve();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(source.status()).toBe('idle');
+    expect(device.gatt.disconnect).toHaveBeenCalledTimes(2);
+  });
+
+  it('a failed manual reconnect while reconnecting keeps the auto-retry going', async () => {
+    const { source, device, failConnect } = setup();
+    await source.connect({ pick: true });
+    device.dispatchEvent(new Event('gattserverdisconnected'));
+    failConnect(true);
+    await expect(source.connect({ pick: false })).rejects.toThrow('out of range');
+    expect(source.status()).toBe('reconnecting');
+    failConnect(false);
+    await vi.advanceTimersByTimeAsync(RETRY_MS);
+    expect(source.status()).toBe('connected');
   });
 });
