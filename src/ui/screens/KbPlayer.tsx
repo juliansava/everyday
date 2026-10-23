@@ -31,7 +31,8 @@ function KbRun({ session }: { session: SessionRecord }) {
   const d = useData();
   const steps = useMemo(() => routineFor(session), [session.id]);
   const [picker, setPicker] = useState(false);
-  const [undo, setUndo] = useState<string[] | null>(null);
+  /** The sets just saved, and the index of the tap step they came from. */
+  const [undo, setUndo] = useState<{ ids: string[]; stepIndex: number } | null>(null);
   const [confirmEnd, setConfirmEnd] = useState(false);
   const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const held = useRef(false);
@@ -69,13 +70,15 @@ function KbRun({ session }: { session: SessionRecord }) {
       at,
     }));
     void Promise.all(records.map((r) => d.store.addSet(r)));
-    setUndo(records.map((r) => r.id));
+    setUndo({ ids: records.map((r) => r.id), stepIndex: runner.stepIndex });
     done();
   };
 
+  // Undo only applies while we're on the step right after the one it undid, and not paused.
+  const canUndo = undo !== null && runner.stepIndex === undo.stepIndex + 1 && !runner.paused;
   const undoLast = async () => {
-    if (!undo) return;
-    const ids = undo;
+    if (!undo || !canUndo) return;
+    const ids = undo.ids;
     setUndo(null);
     await Promise.all(ids.map((id) => d.store.deleteSet(id)));
     back();
@@ -133,6 +136,12 @@ function KbRun({ session }: { session: SessionRecord }) {
             </button>
           </div>
         </div>
+      )}
+
+      {canUndo && (
+        <button class="btn btn-quiet" onClick={undoLast}>
+          Undo last set
+        </button>
       )}
 
       {step.kind === 'tap' ? (
@@ -203,12 +212,6 @@ function KbRun({ session }: { session: SessionRecord }) {
             </button>
           </div>
         </>
-      )}
-
-      {undo && (
-        <button class="btn btn-quiet" onClick={undoLast}>
-          Undo last set
-        </button>
       )}
     </main>
   );
