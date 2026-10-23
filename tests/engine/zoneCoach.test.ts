@@ -62,4 +62,19 @@ describe('ZoneCoach', () => {
     feed(coach, main, 0, 19, 140);
     expect(feed(coach, { ...main, id: 'another' }, 0, 19, 140)).toEqual([]);
   });
+
+  it('restarts the 20 s count after a signal gap longer than 5 s', () => {
+    const coach = new ZoneCoach();
+    expect(feed(coach, main, 0, 9, 140)).toEqual([]);
+    expect(feed(coach, main, 10, 39, 0)).toEqual([]);
+    expect(feed(coach, main, 40, 59, 140)).toEqual([]);
+    expect(feed(coach, main, 60, 60, 140)).toEqual([[60, 'Ease off']]);
+  });
+
+  it('does not restart the count for a 3 s signal flicker inside an above-zone run', () => {
+    const coach = new ZoneCoach();
+    expect(feed(coach, main, 0, 9, 140)).toEqual([]);
+    expect(feed(coach, main, 10, 12, 0)).toEqual([]);
+    expect(feed(coach, main, 13, 20, 140)).toEqual([[20, 'Ease off']]);
+  });
 });
