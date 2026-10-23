@@ -9,7 +9,10 @@ import { todayISO } from '../program/schedule';
 import { staleInProgress } from '../progress/session';
 import { TabBar } from './components/TabBar';
 import { DataContext, type AppData, type Route } from './data';
+import { Finish } from './screens/Finish';
 import { Gallery } from './screens/Gallery';
+import { KbPlayer } from './screens/KbPlayer';
+import { KbStart } from './screens/KbStart';
 import { MorningPlayer } from './screens/MorningPlayer';
 import { Today } from './screens/Today';
 
@@ -146,6 +149,12 @@ function renderRoute(route: Route) {
     // Later tasks add one case per screen here.
     case 'morning':
       return <MorningPlayer key={route.sessionId} sessionId={route.sessionId} next={route.next} />;
+    case 'kb-start':
+      return <KbStart plannedDate={route.plannedDate} />;
+    case 'kb':
+      return <KbPlayer key={route.sessionId} sessionId={route.sessionId} />;
+    case 'finish':
+      return <Finish key={route.sessionId} sessionId={route.sessionId} />;
     default:
       return <Today />;
   }

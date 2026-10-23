@@ -1,4 +1,4 @@
-import { useState } from 'preact/hooks';
+import { useEffect, useState } from 'preact/hooks';
 import { unlockAudio } from '../../cues/browser';
 import { exportBackup, shareOrDownload } from '../../db/backup';
 import { trainingFor } from '../../program/schedule';
@@ -20,6 +20,16 @@ export function Today() {
   const { today, settings, sessions, sets } = d;
   const [busy, setBusy] = useState(false);
   const [backupError, setBackupError] = useState<string | null>(null);
+
+  // Dev shortcut: ?start=kb|z2|z5 jumps straight into that training.
+  useEffect(() => {
+    const kind = new URLSearchParams(location.search).get('start');
+    if (kind !== 'kb' && kind !== 'z2' && kind !== 'z5') return;
+    const url = new URL(location.href);
+    url.searchParams.delete('start');
+    history.replaceState(null, '', url);
+    void beginTraining(d, kind, today);
+  }, []);
 
   const training = trainingFor(today, settings.trainingDays);
   const morningDone = sessions.some((s) => s.kind === 'morning' && s.plannedDate === today && s.status === 'done');
