@@ -10,6 +10,8 @@ import { staleInProgress } from '../progress/session';
 import { TabBar } from './components/TabBar';
 import { DataContext, type AppData, type Route } from './data';
 import { partialSummary } from './flow';
+import { Calendar } from './screens/Calendar';
+import { Day } from './screens/Day';
 import { Finish } from './screens/Finish';
 import { Gallery } from './screens/Gallery';
 import { KbPlayer } from './screens/KbPlayer';
@@ -166,6 +168,10 @@ function renderRoute(route: Route) {
       return <Finish key={route.sessionId} sessionId={route.sessionId} />;
     case 'progress':
       return <Progress />;
+    case 'calendar':
+      return <Calendar />;
+    case 'day':
+      return <Day date={route.date} />;
     default:
       return <Today />;
   }
