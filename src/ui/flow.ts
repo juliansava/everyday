@@ -1,9 +1,10 @@
-import type { SessionRecord } from '../model';
+import type { Store } from '../db/store';
+import type { SessionRecord, SessionSummary } from '../model';
 import type { CircuitEntry } from '../program/routines';
 import { trainingFor, type TrainingDays } from '../program/schedule';
-import type { TrainingKind } from '../program/types';
-import { nextZone2MainMin } from '../progress/cardio';
-import { completedStatus, isComplete, newSession } from '../progress/session';
+import type { TimedStep, TrainingKind } from '../program/types';
+import { nextZone2MainMin, spinSummary } from '../progress/cardio';
+import { completedStatus, isComplete, newSession, routineFor } from '../progress/session';
 import type { AppData, Next, Route } from './data';
 
 export async function beginMorning(d: AppData, next: Next): Promise<void> {
@@ -63,6 +64,13 @@ export async function endPartial(d: AppData, s: SessionRecord, patch: Partial<Se
   const latest = (await d.store.getSession(s.id)) ?? s;
   await d.store.putSession({ ...latest, ...patch, status: 'partial', endedAt: Date.now() });
   await d.reload();
+}
+
+/** The summary an interrupted ride keeps, built from the heart-rate trace saved so far. */
+export async function partialSummary(store: Store, s: SessionRecord): Promise<SessionSummary | undefined> {
+  if (s.kind !== 'z2' && s.kind !== 'z5') return undefined;
+  const trace = await store.getTrace(s.id);
+  return spinSummary(trace?.bpm ?? [], routineFor(s) as TimedStep[]);
 }
 
 /** Where to go to continue an interrupted session. */

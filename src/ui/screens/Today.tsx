@@ -10,7 +10,7 @@ import { makeUpCandidates, plannedPerWeek, sessionsThisWeek, trainingSessionFor,
 import { Header } from '../components/Header';
 import { WeekStrip } from '../components/WeekStrip';
 import { useData, type Next } from '../data';
-import { beginMorning, beginTraining, endPartial, resumeRoute } from '../flow';
+import { beginMorning, beginTraining, endPartial, partialSummary, resumeRoute } from '../flow';
 import { KIND_LABEL, dayName, estimatedMinutes } from '../format';
 
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
@@ -71,6 +71,12 @@ export function Today() {
     }
   };
 
+  const endInterrupted = async () => {
+    if (!interrupted) return;
+    const summary = await partialSummary(d.store, interrupted);
+    await endPartial(d, interrupted, summary ? { summary } : {});
+  };
+
   const allDone = morningDone && !next;
 
   return (
@@ -97,7 +103,7 @@ export function Today() {
             >
               Resume
             </button>
-            <button class="btn btn-quiet" onClick={() => void endPartial(d, interrupted)}>
+            <button class="btn btn-quiet" onClick={() => void endInterrupted()}>
               End here
             </button>
           </div>

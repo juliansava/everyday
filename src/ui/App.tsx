@@ -9,6 +9,7 @@ import { todayISO } from '../program/schedule';
 import { staleInProgress } from '../progress/session';
 import { TabBar } from './components/TabBar';
 import { DataContext, type AppData, type Route } from './data';
+import { partialSummary } from './flow';
 import { Finish } from './screens/Finish';
 import { Gallery } from './screens/Gallery';
 import { KbPlayer } from './screens/KbPlayer';
@@ -75,7 +76,8 @@ export function App() {
         void navigator.storage?.persist?.();
         const first = await load(store);
         for (const s of staleInProgress(first.sessions, Date.now())) {
-          await store.putSession({ ...s, status: 'partial', endedAt: s.startedAt });
+          const summary = await partialSummary(store, s);
+          await store.putSession({ ...s, status: 'partial', endedAt: s.startedAt, ...(summary ? { summary } : {}) });
         }
         await reload();
       } catch (e) {
