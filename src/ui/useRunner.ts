@@ -13,10 +13,19 @@ export interface RunnerHooks {
   onTick?(runner: Runner): void;
 }
 
-/** Runs `steps` with cues and the screen kept awake; re-renders the caller 4 times a second. */
-export function useRunner(steps: Step[], startIndex: number, prefs: CuePrefs, hooks: RunnerHooks = {}) {
+/**
+ * Runs `steps` with cues and the screen kept awake; re-renders the caller 4 times a second.
+ * `startOffsetSec` resumes part-way into the start step (rides).
+ */
+export function useRunner(
+  steps: Step[],
+  startIndex: number,
+  prefs: CuePrefs,
+  hooks: RunnerHooks = {},
+  startOffsetSec = 0,
+) {
   const runnerRef = useRef<Runner | null>(null);
-  runnerRef.current ??= new Runner(steps, now, startIndex);
+  runnerRef.current ??= new Runner(steps, now, startIndex, startOffsetSec);
   const runner = runnerRef.current;
 
   const cuesRef = useRef<CuePlayer | null>(null);

@@ -22,15 +22,22 @@ export class Runner {
   private pausedTotal = 0;
   private lastElapsed = -1;
   private ended = false;
+  private readonly startOffsetSec: number;
 
+  /**
+   * `startIndex` and `startOffsetSec` resume an interrupted session: the runner starts that many
+   * seconds into that step. Cues that were due before the offset aren't replayed.
+   */
   constructor(
     readonly steps: Step[],
     private readonly now: () => number = Date.now,
     startIndex = 0,
+    startOffsetSec = 0,
   ) {
     this.startedAt = now();
     this.stepStart = this.startedAt;
-    this.index = startIndex;
+    this.index = Math.min(Math.max(0, Math.floor(startIndex) || 0), steps.length);
+    this.startOffsetSec = Math.max(0, startOffsetSec || 0);
   }
 
   get stepIndex(): number {
@@ -65,7 +72,7 @@ export class Runner {
   }
 
   start(): RunnerEvent[] {
-    return this.enter(this.index, this.now());
+    return this.enter(this.index, this.now() - this.startOffsetSec * 1000);
   }
 
   tick(): RunnerEvent[] {

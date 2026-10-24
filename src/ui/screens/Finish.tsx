@@ -30,7 +30,8 @@ function KbFinish({ session }: { session: SessionRecord }) {
     void d.store.setsFor(session.id).then(setSets);
   }, [session.id]);
 
-  const durationSec = Math.round(((session.endedAt ?? Date.now()) - session.startedAt) / 1000);
+  // Frozen at mount, so the time doesn't keep growing while a note is typed.
+  const [durationSec] = useState(() => Math.round(((session.endedAt ?? Date.now()) - session.startedAt) / 1000));
   const rate = async (rating: Rating) => {
     setBusy(true);
     await completeSession(d, session, {

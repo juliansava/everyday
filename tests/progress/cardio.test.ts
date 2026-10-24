@@ -5,6 +5,7 @@ import {
   hrRecovery,
   intervalPeaks,
   nextZone2MainMin,
+  resumePoint,
   spinSummary,
   sustainedPeak,
   timeInZone,
@@ -70,6 +71,22 @@ const ride = (over: Partial<SessionRecord>): SessionRecord => ({
   stepIndex: 0, params: { maxHr: 193, mainMin: 45 }, summary: { zone2Share: 0.9 }, ...over,
 });
 const z2At = (mainMin: number, share: number) => ride({ params: { maxHr: 193, mainMin }, summary: { zone2Share: share } });
+
+describe('resuming a ride', () => {
+  const steps = [step('w', 'warmup', 3, null), step('m', 'main', 4, Z2), step('c', 'cooldown', 2, null)];
+
+  it('continues at the recorded second, part-way into its step', () => {
+    expect(resumePoint(steps, 0)).toEqual({ index: 0, offsetSec: 0 });
+    expect(resumePoint(steps, 2)).toEqual({ index: 0, offsetSec: 2 });
+    expect(resumePoint(steps, 3)).toEqual({ index: 1, offsetSec: 0 });
+    expect(resumePoint(steps, 5)).toEqual({ index: 1, offsetSec: 2 });
+  });
+
+  it('is past the last step once the whole ride is recorded', () => {
+    expect(resumePoint(steps, 9)).toEqual({ index: 3, offsetSec: 0 });
+    expect(resumePoint(steps, 12)).toEqual({ index: 3, offsetSec: 0 });
+  });
+});
 
 describe('zone 2 progression', () => {
   it('starts at 45 minutes', () => {

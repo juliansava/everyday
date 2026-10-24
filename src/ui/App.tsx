@@ -9,7 +9,7 @@ import { todayISO } from '../program/schedule';
 import { staleInProgress } from '../progress/session';
 import { TabBar } from './components/TabBar';
 import { DataContext, type AppData, type Route } from './data';
-import { partialSummary } from './flow';
+import { closeInterrupted } from './flow';
 import { Calendar } from './screens/Calendar';
 import { Day } from './screens/Day';
 import { Finish } from './screens/Finish';
@@ -80,8 +80,7 @@ export function App() {
         void navigator.storage?.persist?.();
         const first = await load(store);
         for (const s of staleInProgress(first.sessions, Date.now())) {
-          const summary = await partialSummary(store, s);
-          await store.putSession({ ...s, status: 'partial', endedAt: s.startedAt, ...(summary ? { summary } : {}) });
+          await store.putSession(await closeInterrupted(store, s, s.startedAt));
         }
         await reload();
       } catch (e) {

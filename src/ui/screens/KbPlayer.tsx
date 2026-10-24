@@ -40,7 +40,8 @@ function KbRun({ session }: { session: SessionRecord }) {
   const { runner, done, back, pause, resume } = useRunner(steps, session.stepIndex, d.settings, {
     onStep: (i) => void saveProgress(d, session, i),
     onFinish: async () => {
-      await saveProgress(d, session, steps.length);
+      // The end time is kept, so Finish shows the workout's time however long it's left open.
+      await saveProgress(d, { ...session, endedAt: Date.now() }, steps.length);
       d.go({ name: 'finish', sessionId: session.id });
     },
   });

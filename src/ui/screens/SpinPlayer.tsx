@@ -7,7 +7,7 @@ import type { SessionRecord } from '../../model';
 import { totalSec } from '../../program/routines';
 import type { TimedStep } from '../../program/types';
 import { positionIn } from '../../program/zones';
-import { spinSummary, stepWindows } from '../../progress/cardio';
+import { resumePoint, spinSummary } from '../../progress/cardio';
 import { routineFor } from '../../progress/session';
 import { SPEED } from '../clock';
 import { MissingSession } from '../components/MissingSession';
@@ -29,22 +29,28 @@ const STATUS_LABEL: Record<HrStatus, string> = {
 const FLUSH_SEC = 10;
 
 export function SpinPlayer({ sessionId }: { sessionId: string }) {
+  const d = useData();
   const session = useSession(sessionId);
-  return session ? <Ride session={session} /> : <MissingSession />;
+  // An interrupted ride continues from its saved trace, so the trace is loaded before the ride starts.
+  const [stored, setStored] = useState<number[] | null>(null);
+  useEffect(() => {
+    void d.store.getTrace(sessionId).then((t) => setStored(t?.bpm ?? []));
+  }, [sessionId]);
+  if (!session) return <MissingSession />;
+  return stored ? <Ride session={session} stored={stored} /> : null;
 }
 
-function Ride({ session }: { session: SessionRecord }) {
+function Ride({ session, stored }: { session: SessionRecord; stored: number[] }) {
   const d = useData();
   const steps = useMemo(() => routineFor(session) as TimedStep[], [session.id]);
-  const windows = useMemo(() => stepWindows(steps), [steps]);
   const total = totalSec(steps);
-  // Frozen at mount: saveProgress and data reloads keep changing session.stepIndex mid-ride.
-  const [startIndex] = useState(() => session.stepIndex);
-  // Seconds of the ride before the step we (re)start at; the trace is aligned to step boundaries.
-  const offset = windows[startIndex]?.start ?? total;
+  // Seconds of the ride already recorded. The ride continues exactly there, part-way into its step,
+  // keeping everything recorded so far. Frozen at mount.
+  const [offset] = useState(() => stored.length);
+  const [start] = useState(() => resumePoint(steps, offset));
 
   const trace = useRef<TraceRecorder | null>(null);
-  trace.current ??= new TraceRecorder();
+  trace.current ??= new TraceRecorder(stored);
   const coach = useRef<ZoneCoach | null>(null);
   coach.current ??= new ZoneCoach();
   const lastSample = useRef(offset - 1);
@@ -53,17 +59,10 @@ function Ride({ session }: { session: SessionRecord }) {
   const [confirmEnd, setConfirmEnd] = useState(false);
   const { status, latest } = useHr(d.hr);
 
-  useEffect(() => {
-    if (offset === 0) return;
-    void d.store.getTrace(session.id).then((t) => {
-      if (t) trace.current = new TraceRecorder(t.bpm.slice(0, offset));
-    });
-  }, []);
-
   const flush = () =>
     d.store.putTrace({ sessionId: session.id, startedAt: session.startedAt, bpm: trace.current!.snapshot() });
 
-  const { runner, say, pause, resume } = useRunner(steps, startIndex, d.settings, {
+  const { runner, say, pause, resume } = useRunner(steps, start.index, d.settings, {
     onStep: (i) => void saveProgress(d, session, i),
     onTick: (r) => {
       if (r.paused || r.finished) return;
@@ -87,10 +86,10 @@ function Ride({ session }: { session: SessionRecord }) {
     onFinish: async () => {
       d.hr.disconnect();
       await flush();
-      await saveProgress(d, session, steps.length);
+      await saveProgress(d, { ...session, endedAt: Date.now() }, steps.length);
       d.go({ name: 'finish', sessionId: session.id });
     },
-  });
+  }, start.offsetSec);
 
   useEffect(() => {
     const prev = prevStatus.current;

@@ -106,4 +106,38 @@ describe('Runner', () => {
     const r = new Runner([tap('a'), tap('b'), tap('c')], now, 2);
     expect(r.start()[0]).toMatchObject({ type: 'step', index: 2 });
   });
+
+  it('can resume part-way into a timed step', () => {
+    const r = new Runner([timed('a', 10), timed('b', 10, [{ at: 0, say: 'B' }, { at: 6, say: 'b6' }])], now, 1, 4);
+    const events = r.start();
+    expect(events[0]).toMatchObject({ type: 'step', index: 1 });
+    expect(says(events)).toEqual([]); // 'B' was already said before the interruption
+    expect(r.elapsedInStep()).toBe(4);
+    expect(r.remainingInStep()).toBe(6);
+    expect(r.totalElapsed()).toBe(0);
+    at(2);
+    expect(says(r.tick())).toEqual(['b6']);
+    expect(r.totalElapsed()).toBe(2);
+    at(6);
+    expect(r.tick().map((e) => e.type)).toEqual(['finished']);
+  });
+
+  it('keeps a resumed step offset across a pause', () => {
+    const r = new Runner([timed('a', 10)], now, 0, 3);
+    r.start();
+    at(2);
+    r.pause();
+    at(30);
+    r.resume();
+    expect(r.elapsedInStep()).toBe(5);
+    at(35);
+    expect(r.tick().map((e) => e.type)).toEqual(['finished']);
+  });
+
+  it('clamps a start index outside the routine', () => {
+    const past = new Runner([tap('a'), tap('b')], now, 5);
+    expect(past.start()).toEqual([{ type: 'finished' }]);
+    expect(past.stepIndex).toBe(2);
+    expect(new Runner([tap('a'), tap('b')], now, -1).stepIndex).toBe(0);
+  });
 });

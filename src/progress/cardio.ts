@@ -21,6 +21,13 @@ export function stepWindows(steps: TimedStep[]): StepWindow[] {
   });
 }
 
+/** Where an interrupted ride continues: the step containing second `recordedSec` and how far into it. */
+export function resumePoint(steps: TimedStep[], recordedSec: number): { index: number; offsetSec: number } {
+  const windows = stepWindows(steps);
+  const index = windows.findIndex((w) => recordedSec < w.end);
+  return index < 0 ? { index: steps.length, offsetSec: 0 } : { index, offsetSec: recordedSec - windows[index].start };
+}
+
 const inRange = (bpm: number, r: Range) => bpm > 0 && bpm >= r.low && bpm <= r.high;
 
 function secondsInRange(bpm: number[], w: StepWindow, r: Range): number {

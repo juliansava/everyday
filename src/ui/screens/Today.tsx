@@ -10,7 +10,7 @@ import { makeUpCandidates, plannedPerWeek, sessionsThisWeek, trainingSessionFor,
 import { Header } from '../components/Header';
 import { WeekStrip } from '../components/WeekStrip';
 import { useData, type Next } from '../data';
-import { beginMorning, beginTraining, endPartial, partialSummary, resumeRoute } from '../flow';
+import { beginMorning, beginTraining, closeInterrupted, reachedEnd, resumeRoute } from '../flow';
 import { KIND_LABEL, dayName, estimatedMinutes } from '../format';
 
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
@@ -73,9 +73,11 @@ export function Today() {
 
   const endInterrupted = async () => {
     if (!interrupted) return;
-    const summary = await partialSummary(d.store, interrupted);
-    await endPartial(d, interrupted, summary ? { summary } : {});
+    await d.store.putSession(await closeInterrupted(d.store, interrupted, Date.now()));
+    await d.reload();
   };
+  // Ran to the end but was never saved on its Finish screen.
+  const unsaved = interrupted !== undefined && reachedEnd(interrupted);
 
   const allDone = morningDone && !next;
 
@@ -92,7 +94,9 @@ export function Today() {
 
       {interrupted && (
         <section class="banner">
-          <p>Your {KIND_LABEL[interrupted.kind].toLowerCase()} was interrupted.</p>
+          <p>
+            Your {KIND_LABEL[interrupted.kind].toLowerCase()} {unsaved ? "isn't saved yet." : 'was interrupted.'}
+          </p>
           <div class="btn-row">
             <button
               class="btn"
@@ -101,7 +105,7 @@ export function Today() {
                 d.go(resumeRoute(interrupted, today, settings.trainingDays, sessions));
               }}
             >
-              Resume
+              {unsaved ? 'Save' : 'Resume'}
             </button>
             <button class="btn btn-quiet" onClick={() => void endInterrupted()}>
               End here

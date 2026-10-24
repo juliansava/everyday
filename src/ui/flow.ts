@@ -1,10 +1,10 @@
 import type { Store } from '../db/store';
 import type { SessionRecord, SessionSummary } from '../model';
 import type { CircuitEntry } from '../program/routines';
-import { trainingFor, type TrainingDays } from '../program/schedule';
+import { todayISO, trainingFor, type TrainingDays } from '../program/schedule';
 import type { TimedStep, TrainingKind } from '../program/types';
 import { nextZone2MainMin, spinSummary } from '../progress/cardio';
-import { completedStatus, isComplete, newSession, routineFor } from '../progress/session';
+import { completedStatus, isComplete, kbTotalReps, newSession, routineFor } from '../progress/session';
 import type { AppData, Next, Route } from './data';
 
 export async function beginMorning(d: AppData, next: Next): Promise<void> {
@@ -73,6 +73,42 @@ export async function partialSummary(store: Store, s: SessionRecord): Promise<Se
   return spinSummary(trace?.bpm ?? [], routineFor(s) as TimedStep[]);
 }
 
+/** A kettlebell session or ride that ran its whole routine: only the Finish screen's save is missing. */
+export function reachedEnd(s: SessionRecord): boolean {
+  return s.kind !== 'morning' && s.stepIndex >= routineFor(s).length;
+}
+
+/**
+ * Files an interrupted session when it's ended from Today or auto-saved after 12 h. One that reached
+ * the end of its routine counts as done on the day it was done (a kettlebell session just has no
+ * rating); anything else is partial. Rides keep the summary of their stored trace either way.
+ * `endedAt` is used when the session has no end time of its own.
+ */
+export async function closeInterrupted(store: Store, s: SessionRecord, endedAt: number): Promise<SessionRecord> {
+  const latest = (await store.getSession(s.id)) ?? s;
+  if (!reachedEnd(latest)) {
+    const summary = await partialSummary(store, latest);
+    return { ...latest, status: 'partial', endedAt, ...(summary ? { summary } : {}) };
+  }
+  let summary: SessionSummary | undefined;
+  let end = latest.endedAt;
+  if (latest.kind === 'kb') {
+    const sets = await store.setsFor(latest.id);
+    end ??= Math.max(latest.startedAt, ...sets.map((x) => x.at));
+    summary = { totalReps: kbTotalReps(sets), durationSec: Math.round((end - latest.startedAt) / 1000) };
+  } else {
+    summary = await partialSummary(store, latest);
+  }
+  const doneDate = todayISO(new Date(end ?? latest.startedAt));
+  return {
+    ...latest,
+    status: completedStatus(latest.plannedDate, doneDate),
+    doneDate,
+    endedAt: end ?? endedAt,
+    ...(summary ? { summary } : {}),
+  };
+}
+
 /** Where to go to continue an interrupted session. */
 export function resumeRoute(
   s: SessionRecord,
@@ -92,8 +128,10 @@ export function resumeRoute(
       };
     }
     case 'kb':
-      return { name: 'kb', sessionId: s.id };
-    default:
-      return { name: 'spin', sessionId: s.id };
+    case 'z2':
+    case 'z5':
+      // Restarting a player at the end would finish at once and, for a ride, overwrite its trace.
+      if (reachedEnd(s)) return { name: 'finish', sessionId: s.id };
+      return s.kind === 'kb' ? { name: 'kb', sessionId: s.id } : { name: 'spin', sessionId: s.id };
   }
 }
