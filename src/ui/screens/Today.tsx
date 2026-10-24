@@ -4,13 +4,13 @@ import { exportBackup, shareOrDownload } from '../../db/backup';
 import { trainingFor } from '../../program/schedule';
 import type { TrainingKind } from '../../program/types';
 import { lastWeekLine } from '../../progress/ladder';
-import { isComplete } from '../../progress/session';
+import { isComplete, resumable } from '../../progress/session';
 import { morningStreak } from '../../progress/streaks';
 import { makeUpCandidates, plannedPerWeek, sessionsThisWeek, trainingSessionFor, weekView } from '../../progress/week';
 import { Header } from '../components/Header';
 import { WeekStrip } from '../components/WeekStrip';
 import { useData, type Next } from '../data';
-import { beginMorning, beginTraining } from '../flow';
+import { beginMorning, beginTraining, endPartial, resumeRoute } from '../flow';
 import { KIND_LABEL, dayName, estimatedMinutes } from '../format';
 
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
@@ -42,6 +42,7 @@ export function Today() {
   const makeUps = makeUpCandidates(today, settings.trainingDays, sessions);
   const mondayLine = lastWeekLine(today, settings.trainingDays, sessions, sets, settings.bellsKg);
   const backupDue = sessions.length > 0 && Date.now() - (settings.lastBackupAt ?? 0) > WEEK_MS;
+  const interrupted = resumable(sessions, Date.now());
 
   const minutes = (morningDone ? 0 : 5) + (next ? estimatedMinutes(next.kind, sessions) : 0);
   const title = training ? `Morning + ${KIND_LABEL[training].toLowerCase()}` : 'Morning routine';
@@ -82,6 +83,26 @@ export function Today() {
           </button>
         }
       />
+
+      {interrupted && (
+        <section class="banner">
+          <p>Your {KIND_LABEL[interrupted.kind].toLowerCase()} was interrupted.</p>
+          <div class="btn-row">
+            <button
+              class="btn"
+              onClick={() => {
+                unlockAudio();
+                d.go(resumeRoute(interrupted, today, settings.trainingDays, sessions));
+              }}
+            >
+              Resume
+            </button>
+            <button class="btn btn-quiet" onClick={() => void endPartial(d, interrupted)}>
+              End here
+            </button>
+          </div>
+        </section>
+      )}
 
       <section class="card">
         <h2>{title}</h2>

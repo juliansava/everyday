@@ -1,9 +1,10 @@
 import type { SessionRecord } from '../model';
 import type { CircuitEntry } from '../program/routines';
+import { trainingFor, type TrainingDays } from '../program/schedule';
 import type { TrainingKind } from '../program/types';
 import { nextZone2MainMin } from '../progress/cardio';
-import { completedStatus, newSession } from '../progress/session';
-import type { AppData, Next } from './data';
+import { completedStatus, isComplete, newSession } from '../progress/session';
+import type { AppData, Next, Route } from './data';
 
 export async function beginMorning(d: AppData, next: Next): Promise<void> {
   const s = newSession('morning', d.today, Date.now());
@@ -62,4 +63,29 @@ export async function endPartial(d: AppData, s: SessionRecord, patch: Partial<Se
   const latest = (await d.store.getSession(s.id)) ?? s;
   await d.store.putSession({ ...latest, ...patch, status: 'partial', endedAt: Date.now() });
   await d.reload();
+}
+
+/** Where to go to continue an interrupted session. */
+export function resumeRoute(
+  s: SessionRecord,
+  today: string,
+  days: TrainingDays,
+  sessions: SessionRecord[],
+): Route {
+  switch (s.kind) {
+    case 'morning': {
+      const training = trainingFor(today, days);
+      const done =
+        training !== null && sessions.some((x) => x.kind === training && x.plannedDate === today && isComplete(x));
+      return {
+        name: 'morning',
+        sessionId: s.id,
+        next: training && !done ? { kind: training, plannedDate: today } : null,
+      };
+    }
+    case 'kb':
+      return { name: 'kb', sessionId: s.id };
+    default:
+      return { name: 'spin', sessionId: s.id };
+  }
 }
