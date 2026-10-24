@@ -26,8 +26,10 @@ export function SettingsScreen() {
   // blur-triggered save never writes back a stale snapshot.
   const chain = useRef<Promise<unknown>>(Promise.resolve());
   const save = (patch: Partial<Settings>): Promise<void> => {
-    const run = chain.current.then(async () => d.saveSettings({ ...(await d.store.getSettings()), ...patch }));
-    chain.current = run.catch(() => {});
+    // The swallow sits on the next link, so a failed write doesn't block later saves but is still
+    // reported as unhandled when nobody awaits it (App shows its "Couldn't save" banner then).
+    const run = chain.current.catch(() => {}).then(async () => d.saveSettings({ ...(await d.store.getSettings()), ...patch }));
+    chain.current = run;
     return run;
   };
 
