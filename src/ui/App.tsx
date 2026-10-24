@@ -141,7 +141,11 @@ export function App() {
       {saveFailed && (
         <div class="banner" role="alert" style={{ margin: '16px' }}>
           <p class="error">Couldn't save. Export a backup now.</p>
-          <button class="btn" onClick={() => void exportBackup(store).then((b) => shareOrDownload(b))}>
+          <button
+            class="btn"
+            // A closed share sheet or a failed export leaves the banner up, so they can try again.
+            onClick={() => void exportBackup(store).then((b) => shareOrDownload(b)).catch(() => undefined)}
+          >
             Export backup
           </button>
         </div>

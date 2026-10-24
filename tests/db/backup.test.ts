@@ -1,5 +1,5 @@
 import 'fake-indexeddb/auto';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   BACKUP_VERSION,
   backupFileName,
@@ -7,6 +7,8 @@ import {
   exportBackup,
   importBackup,
   parseBackup,
+  shareOrDownload,
+  type Backup,
 } from '../../src/db/backup';
 import { openStore } from '../../src/db/store';
 import { DEFAULT_SETTINGS, type SessionRecord } from '../../src/model';
@@ -115,7 +117,67 @@ describe('backup', () => {
     });
   });
 
-  it('names the file after the date', () => {
-    expect(backupFileName(new Date(2026, 9, 23))).toBe('everyday-backup-2026-10-23.json');
+  it('names the file after the date, as a text file Android can share', () => {
+    expect(backupFileName(new Date(2026, 9, 23))).toBe('everyday-backup-2026-10-23.txt');
+  });
+});
+
+describe('shareOrDownload', () => {
+  const backup = { app: 'everyday', version: BACKUP_VERSION } as Backup;
+  const day = new Date(2026, 9, 23);
+
+  /** Stubs the share API and a download link; returns what was shared and downloaded. */
+  function stubBrowser(share?: (data: ShareData) => Promise<void>) {
+    const shared: File[] = [];
+    const downloads: string[] = [];
+    vi.stubGlobal('navigator', share
+      ? {
+          canShare: () => true,
+          share: async (data: ShareData) => {
+            shared.push(...(data.files ?? []));
+            await share(data);
+          },
+        }
+      : {});
+    vi.stubGlobal('document', {
+      createElement: () => {
+        const link = { href: '', download: '', click: () => downloads.push(link.download) };
+        return link;
+      },
+    });
+    vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:backup');
+    vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => undefined);
+    return { shared, downloads };
+  }
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
+
+  it('shares the backup as a plain-text file', async () => {
+    const { shared, downloads } = stubBrowser(async () => undefined);
+    expect(await shareOrDownload(backup, day)).toBe('shared');
+    expect(shared.map((f) => [f.name, f.type])).toEqual([['everyday-backup-2026-10-23.txt', 'text/plain']]);
+    expect(JSON.parse(await shared[0].text())).toMatchObject({ app: 'everyday' });
+    expect(downloads).toEqual([]);
+  });
+
+  it('downloads the file when the share sheet refuses it', async () => {
+    const { downloads } = stubBrowser(() => Promise.reject(new DOMException('Permission denied', 'NotAllowedError')));
+    expect(await shareOrDownload(backup, day)).toBe('downloaded');
+    expect(downloads).toEqual(['everyday-backup-2026-10-23.txt']);
+  });
+
+  it('downloads the file when sharing files is not supported', async () => {
+    const { downloads } = stubBrowser();
+    expect(await shareOrDownload(backup, day)).toBe('downloaded');
+    expect(downloads).toEqual(['everyday-backup-2026-10-23.txt']);
+  });
+
+  it('does nothing more when the share sheet is closed', async () => {
+    const { downloads } = stubBrowser(() => Promise.reject(new DOMException('Share canceled', 'AbortError')));
+    await expect(shareOrDownload(backup, day)).rejects.toMatchObject({ name: 'AbortError' });
+    expect(downloads).toEqual([]);
   });
 });

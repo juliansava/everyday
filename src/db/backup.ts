@@ -123,17 +123,23 @@ export async function importBackup(store: Store, backup: Backup): Promise<void> 
   });
 }
 
+/** A .txt name: Chrome on Android only shares allow-listed file types, and .json isn't one. The content is JSON. */
 export function backupFileName(now = new Date()): string {
-  return `everyday-backup-${todayISO(now)}.json`;
+  return `everyday-backup-${todayISO(now)}.txt`;
 }
 
 /** Opens the Android share sheet (e.g. to Google Drive); falls back to a download. */
 export async function shareOrDownload(backup: Backup, now = new Date()): Promise<'shared' | 'downloaded'> {
   const name = backupFileName(now);
-  const file = new File([JSON.stringify(backup)], name, { type: 'application/json' });
-  if (navigator.canShare?.({ files: [file] })) {
-    await navigator.share({ files: [file], title: 'Everyday backup' });
-    return 'shared';
+  const file = new File([JSON.stringify(backup)], name, { type: 'text/plain' });
+  try {
+    if (navigator.canShare?.({ files: [file] })) {
+      await navigator.share({ files: [file], title: 'Everyday backup' });
+      return 'shared';
+    }
+  } catch (e) {
+    if (e instanceof DOMException && e.name === 'AbortError') throw e; // share sheet closed
+    // Any other refusal (e.g. NotAllowedError for the file type): download the file instead.
   }
   const url = URL.createObjectURL(file);
   const link = document.createElement('a');

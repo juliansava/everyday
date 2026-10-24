@@ -194,9 +194,13 @@ export function SettingsScreen() {
           Import backup
           <input
             type="file"
-            accept=".json,application/json"
+            accept=".json,.txt,application/json,text/plain"
             style={{ display: 'none' }}
-            onChange={(e) => void pickFile(e.currentTarget.files?.[0])}
+            onChange={(e) => {
+              const input = e.currentTarget;
+              void pickFile(input.files?.[0]);
+              input.value = ''; // so the same file can be picked again, e.g. after Cancel
+            }}
           />
         </label>
         {pending && (
