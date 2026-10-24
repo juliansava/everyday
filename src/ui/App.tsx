@@ -18,6 +18,7 @@ import { KbPlayer } from './screens/KbPlayer';
 import { KbStart } from './screens/KbStart';
 import { MorningPlayer } from './screens/MorningPlayer';
 import { Progress } from './screens/Progress';
+import { SettingsScreen } from './screens/Settings';
 import { SpinPlayer } from './screens/SpinPlayer';
 import { SpinStart } from './screens/SpinStart';
 import { Today } from './screens/Today';
@@ -172,6 +173,8 @@ function renderRoute(route: Route) {
       return <Calendar />;
     case 'day':
       return <Day date={route.date} />;
+    case 'settings':
+      return <SettingsScreen />;
     default:
       return <Today />;
   }
