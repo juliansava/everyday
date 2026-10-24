@@ -35,8 +35,10 @@ const HALO_FRONT: Pose = [50,14, 50,22, 50,52, 40,34, 47,32, 60,34, 53,32, 46,72
 const CP_HANG: Pose = [50,20, 50,28, 50,54, 42,40, 40,54, 54,44, 53,60, 45,73, 45,92, 55,73, 55,92];
 const CP_RACK: Pose = [50,14, 50,22, 50,52, 42,37, 40,52, 60,34, 56,24, 46,72, 45,92, 54,72, 55,92];
 const CP_OVERHEAD: Pose = [50,14, 50,22, 50,52, 42,37, 40,52, 56,14, 58,6, 46,72, 45,92, 54,72, 55,92];
-const WM_TALL: Pose = [50,16, 50,24, 54,54, 44,40, 42,54, 55,14, 58,6, 44,73, 40,92, 62,73, 64,92];
-const WM_DOWN: Pose = [30,32, 36,36, 58,56, 36,58, 40,80, 40,22, 44,8, 44,74, 40,92, 62,73, 64,92];
+const LUNGE_STAND: Pose = [50,14, 50,22, 50,52, 42,34, 48,34, 58,34, 52,34, 46,72, 45,92, 54,72, 55,92];
+const LUNGE_RIGHT: Pose = [50,22, 50,30, 50,60, 56,42, 64,52, 64,40, 68,52, 45,76, 44,92, 56,82, 57,92];
+const LUNGE_BOTTOM: Pose = [50,28, 50,36, 50,66, 36,48, 32,58, 44,46, 36,58, 44,78, 44,92, 56,88, 58,92];
+const LUNGE_UP: Pose = [50,20, 50,28, 50,58, 42,40, 46,46, 58,40, 54,46, 45,75, 44,92, 55,80, 56,92];
 
 // Side view, facing right
 const SIDE_STAND: Pose = [52,12, 50,22, 48,52, 52,36, 54,50, 52,37, 55,51, 50,72, 50,92, 51,72, 51,92];
@@ -69,8 +71,12 @@ export const DRAWINGS: Record<ExerciseId, Drawing> = {
   halo: { frames: [HALO_L, HALO_TOP, HALO_R, HALO_FRONT, HALO_L], durationSec: 3.2, bell: 'both' },
   'single-arm-swing': { frames: [SWING_BACK, SWING_TOP, SWING_BACK], durationSec: 1.4, bell: 'r' },
   'clean-and-press': { frames: [CP_HANG, CP_RACK, CP_OVERHEAD, CP_RACK, CP_HANG], durationSec: 4, bell: 'r' },
-  'low-windmill': { frames: [WM_TALL, WM_DOWN, WM_TALL], durationSec: 4, bell: 'l' },
-  'overhead-windmill': { frames: [WM_TALL, WM_DOWN, WM_TALL], durationSec: 4, bell: 'r' },
+  // The bell circles the torso: front, right, round the back, front again.
+  'around-world-lunge': {
+    frames: [LUNGE_STAND, LUNGE_RIGHT, LUNGE_BOTTOM, LUNGE_UP, LUNGE_STAND],
+    durationSec: 3.6,
+    bell: 'both',
+  },
   'renegade-row-push-up': {
     frames: [RR_PLANK, RR_ROW, RR_PLANK, RR_BOTTOM, RR_PLANK],
     durationSec: 4.5,

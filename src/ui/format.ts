@@ -28,7 +28,15 @@ export const KIND_LABEL: Record<SessionKind, string> = {
   morning: 'Morning routine',
   kb: 'Kettlebell',
   z2: 'Zone 2 ride',
-  z5: 'Zone 5 ride',
+  z5: 'Norwegian 4×4',
+};
+
+/** The same names mid-sentence: lowercase, except the proper name. */
+export const KIND_PHRASE: Record<SessionKind, string> = {
+  morning: 'morning routine',
+  kb: 'kettlebell',
+  z2: 'zone 2 ride',
+  z5: 'Norwegian 4×4',
 };
 
 export function estimatedMinutes(kind: SessionKind, sessions: SessionRecord[]): number {

@@ -48,7 +48,7 @@ describe('kettlebell routine', () => {
     circuit: [
       { exerciseId: 'single-arm-swing', repsPerSide: 10, weightKg: 12 },
       { exerciseId: 'clean-and-press', repsPerSide: 10, weightKg: 8 },
-      { exerciseId: 'low-windmill', repsPerSide: 10, weightKg: 8 },
+      { exerciseId: 'around-world-lunge', repsPerSide: 10, weightKg: 8 },
       { exerciseId: 'renegade-row-push-up', repsPerSide: 5, weightKg: 8 },
     ],
   };

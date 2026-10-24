@@ -130,7 +130,7 @@ export function SettingsScreen() {
         </label>
         {maxHrError && <p class="error">{maxHrError}</p>}
         <p class="muted small">
-          Zone 2: {z2.low}–{z2.high} bpm · Zone 5: {z5.low}–{z5.high} bpm
+          Zone 2: {z2.low}–{z2.high} bpm · Norwegian 4×4: {z5.low}–{z5.high} bpm
         </p>
       </section>
 

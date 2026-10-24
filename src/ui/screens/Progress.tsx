@@ -87,7 +87,7 @@ export function Progress() {
             <BarChart data={everyFourth(z2Weekly, (i) => z2Weekly[i].minutes)} />
             <p class="muted small">Zone 2 main block length</p>
             <LineChart points={z2Main.map((r) => ({ label: shortDate(r.date), value: r.mainMin }))} unit=" min" />
-            <p class="muted small">Zone 5 average interval peak</p>
+            <p class="muted small">Norwegian 4×4 average interval peak</p>
             <LineChart
               points={z5.flatMap((r) => (r.avgPeak === null ? [] : [{ label: shortDate(r.date), value: r.avgPeak }]))}
               unit=" bpm"

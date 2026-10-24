@@ -11,8 +11,7 @@ export type ExerciseId =
   | 'halo'
   | 'single-arm-swing'
   | 'clean-and-press'
-  | 'low-windmill'
-  | 'overhead-windmill'
+  | 'around-world-lunge'
   | 'renegade-row-push-up';
 
 export interface Exercise {

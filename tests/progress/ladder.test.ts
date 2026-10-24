@@ -30,9 +30,9 @@ describe('nextStep', () => {
     expect(nextStep('press', { ...at16, repsPerSide: 15 }, BELLS)).toBeNull();
   });
 
-  it('moves from the low windmill to the overhead windmill with the lightest bell', () => {
-    expect(nextStep('windmill', { exerciseId: 'low-windmill', weightKg: 12, repsPerSide: 10 }, BELLS))
-      .toEqual({ exerciseId: 'overhead-windmill', weightKg: 8, repsPerSide: 10 });
+  it('climbs the bells for the around-the-world lunge', () => {
+    expect(nextStep('lunge', { exerciseId: 'around-world-lunge', weightKg: 8, repsPerSide: 10 }, BELLS))
+      .toEqual({ exerciseId: 'around-world-lunge', weightKg: 12, repsPerSide: 10 });
   });
 
   it('uses 5 → 6 → 8 reps per side for renegade rows', () => {
@@ -103,7 +103,7 @@ describe('suggestions', () => {
   it('resets only the exercise with missed reps', () => {
     const h = history(kbSession(DEFAULT_CIRCUIT), kbSession(DEFAULT_CIRCUIT, { missed: ['clean-and-press'] }));
     const slots = suggestions(h, BELLS, 90).map((s) => ('slot' in s ? s.slot : s.kind));
-    expect(slots).toEqual(['swing', 'windmill', 'renegade']);
+    expect(slots).toEqual(['swing', 'lunge', 'renegade']);
   });
 
   it('reports the end of a ladder', () => {
@@ -117,20 +117,20 @@ describe('suggestions', () => {
     });
   });
 
-  it('names the exercise on the ladder end, here the overhead windmill', () => {
-    const overhead: CircuitEntry[] = DEFAULT_CIRCUIT.map((c) =>
-      c.exerciseId === 'low-windmill' ? { exerciseId: 'overhead-windmill', weightKg: 16, repsPerSide: 15 } : c,
+  it('names the exercise on the ladder end, here the lunge', () => {
+    const topLunge: CircuitEntry[] = DEFAULT_CIRCUIT.map((c) =>
+      c.exerciseId === 'around-world-lunge' ? { ...c, weightKg: 16, repsPerSide: 15 } : c,
     );
-    const h = history(kbSession(overhead), kbSession(overhead));
+    const h = history(kbSession(topLunge), kbSession(topLunge));
     expect(suggestions(h, BELLS, 90).filter((s) => s.kind === 'ladder-end').map(describeSuggestion))
-      .toEqual(['Windmill: ready for a heavier bell']);
+      .toEqual(['Around-the-world reverse lunge: ready for a heavier bell']);
   });
 
   it('suggests shorter rest once every exercise is at the heaviest bell', () => {
     const top: CircuitEntry[] = [
       { exerciseId: 'single-arm-swing', weightKg: 16, repsPerSide: 12 },
       { exerciseId: 'clean-and-press', weightKg: 16, repsPerSide: 10 },
-      { exerciseId: 'overhead-windmill', weightKg: 16, repsPerSide: 10 },
+      { exerciseId: 'around-world-lunge', weightKg: 16, repsPerSide: 10 },
       { exerciseId: 'renegade-row-push-up', weightKg: 16, repsPerSide: 5 },
     ];
     const h = history(kbSession(top), kbSession(top));
@@ -147,7 +147,7 @@ describe('suggestions', () => {
     const top: CircuitEntry[] = [
       { exerciseId: 'single-arm-swing', weightKg: 16, repsPerSide: 12 },
       { exerciseId: 'clean-and-press', weightKg: 16, repsPerSide: 10 },
-      { exerciseId: 'overhead-windmill', weightKg: 16, repsPerSide: 10 },
+      { exerciseId: 'around-world-lunge', weightKg: 16, repsPerSide: 10 },
       { exerciseId: 'renegade-row-push-up', weightKg: 16, repsPerSide: 5 },
     ];
     const renegadeAt12: CircuitEntry[] = top.map((c) =>
@@ -175,14 +175,6 @@ describe('suggestions', () => {
     expect(describeSuggestion({ kind: 'rest', fromSec: 90, toSec: 75 }))
       .toBe('Rest between rounds: cut to 75 s');
   });
-
-  it('names the overhead windmill when switching to it', () => {
-    expect(describeSuggestion({
-      kind: 'step', slot: 'windmill',
-      from: { exerciseId: 'low-windmill', weightKg: 12, repsPerSide: 15 },
-      to: { exerciseId: 'overhead-windmill', weightKg: 8, repsPerSide: 10 },
-    })).toBe('Low windmill: switch to overhead windmill at 8 kg × 10 per side');
-  });
 });
 
 describe('current circuit', () => {
@@ -202,11 +194,11 @@ describe('current circuit', () => {
 
   it('applies an accepted step to the circuit', () => {
     const next = applyStep(DEFAULT_CIRCUIT, {
-      kind: 'step', slot: 'windmill',
+      kind: 'step', slot: 'lunge',
       from: DEFAULT_CIRCUIT[2],
-      to: { exerciseId: 'overhead-windmill', weightKg: 8, repsPerSide: 10 },
+      to: { exerciseId: 'around-world-lunge', weightKg: 12, repsPerSide: 10 },
     });
-    expect(next[2]).toEqual({ exerciseId: 'overhead-windmill', weightKg: 8, repsPerSide: 10 });
+    expect(next[2]).toEqual({ exerciseId: 'around-world-lunge', weightKg: 12, repsPerSide: 10 });
     expect(next[0]).toEqual(DEFAULT_CIRCUIT[0]);
   });
 

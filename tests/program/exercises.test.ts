@@ -5,12 +5,12 @@ const ALL_IDS = [
   'lymphatic-hops', 'trunk-twists', 'worlds-greatest-stretch', 'cossack-squat',
   'deep-squat-hold', 'hurdler-stretch', 'deep-breaths',
   'bw-squat', 'push-up', 'halo',
-  'single-arm-swing', 'clean-and-press', 'low-windmill', 'overhead-windmill',
+  'single-arm-swing', 'clean-and-press', 'around-world-lunge',
   'renegade-row-push-up',
 ];
 
 describe('exercise catalog', () => {
-  it('has exactly the 15 exercises from the spec', () => {
+  it('has exactly the 14 exercises in the program', () => {
     expect(Object.keys(EXERCISES).sort()).toEqual([...ALL_IDS].sort());
   });
 

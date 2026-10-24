@@ -11,7 +11,7 @@ import { Header } from '../components/Header';
 import { WeekStrip } from '../components/WeekStrip';
 import { useData, type Next } from '../data';
 import { beginMorning, beginTraining, closeInterrupted, reachedEnd, resumeRoute } from '../flow';
-import { KIND_LABEL, dayName, estimatedMinutes } from '../format';
+import { KIND_LABEL, KIND_PHRASE, dayName, estimatedMinutes } from '../format';
 
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -45,7 +45,7 @@ export function Today() {
   const interrupted = resumable(sessions, Date.now());
 
   const minutes = (morningDone ? 0 : 5) + (next ? estimatedMinutes(next.kind, sessions) : 0);
-  const withMorning = (kind: TrainingKind | null) => (kind ? `Morning + ${KIND_LABEL[kind].toLowerCase()}` : 'Morning routine');
+  const withMorning = (kind: TrainingKind | null) => (kind ? `Morning + ${KIND_PHRASE[kind]}` : 'Morning routine');
   // What's left to do today; once everything is done, what the day held.
   const title = !morningDone ? withMorning(next?.kind ?? null) : next ? KIND_LABEL[next.kind] : withMorning(training);
 
@@ -97,7 +97,7 @@ export function Today() {
       {interrupted && (
         <section class="banner">
           <p>
-            Your {KIND_LABEL[interrupted.kind].toLowerCase()} {unsaved ? "isn't saved yet." : 'was interrupted.'}
+            Your {KIND_PHRASE[interrupted.kind]} {unsaved ? "isn't saved yet." : 'was interrupted.'}
           </p>
           <div class="btn-row">
             <button
@@ -126,7 +126,7 @@ export function Today() {
             {/* While a session is interrupted, it's resumed or ended first, so it can't be done twice. */}
             {!interrupted && (
               <button class="btn btn-primary" disabled={busy} onClick={start}>
-                {morningDone && next ? `Start ${KIND_LABEL[next.kind].toLowerCase()}` : 'Start'}
+                {morningDone && next ? `Start ${KIND_PHRASE[next.kind]}` : 'Start'}
               </button>
             )}
           </>
@@ -157,7 +157,7 @@ export function Today() {
 
       {!interrupted && makeUps.slice(-1).map((m) => (
         <button key={m.date} class="btn" disabled={busy} onClick={() => makeUp(m.date, m.kind)}>
-          Make up: {dayName(m.date)} {KIND_LABEL[m.kind].toLowerCase()}
+          Make up: {dayName(m.date)} {KIND_PHRASE[m.kind]}
         </button>
       ))}
 

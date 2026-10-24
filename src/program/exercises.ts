@@ -73,16 +73,10 @@ export const EXERCISES: Record<ExerciseId, Exercise> = {
     cue: 'Clean to the rack, brace, press straight up, lock out.',
     perSide: true,
   },
-  'low-windmill': {
-    id: 'low-windmill',
-    name: 'Low windmill',
-    cue: 'Bell in the bottom hand, hip out, slide down the front leg, eyes on the top hand.',
-    perSide: true,
-  },
-  'overhead-windmill': {
-    id: 'overhead-windmill',
-    name: 'Windmill',
-    cue: 'Bell locked out overhead, hip out, hinge down, eyes on the bell.',
+  'around-world-lunge': {
+    id: 'around-world-lunge',
+    name: 'Around-the-world reverse lunge',
+    cue: 'Circle the bell around your torso as you step back into a lunge; drive up through the front heel.',
     perSide: true,
   },
   'renegade-row-push-up': {

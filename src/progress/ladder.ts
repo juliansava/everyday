@@ -6,21 +6,21 @@ import type { ExerciseId } from '../program/types';
 import { isComplete } from './session';
 import { firstDay } from './week';
 
-export type SlotId = 'swing' | 'press' | 'windmill' | 'renegade';
+export type SlotId = 'swing' | 'press' | 'lunge' | 'renegade';
 
-export const SLOTS: SlotId[] = ['swing', 'press', 'windmill', 'renegade'];
+export const SLOTS: SlotId[] = ['swing', 'press', 'lunge', 'renegade'];
 
 export const SLOT_EXERCISES: Record<SlotId, ExerciseId[]> = {
   swing: ['single-arm-swing'],
   press: ['clean-and-press'],
-  windmill: ['low-windmill', 'overhead-windmill'],
+  lunge: ['around-world-lunge'],
   renegade: ['renegade-row-push-up'],
 };
 
 export const REP_LADDER: Record<SlotId, number[]> = {
   swing: [10, 12, 15],
   press: [10, 12, 15],
-  windmill: [10, 12, 15],
+  lunge: [10, 12, 15],
   renegade: [5, 6, 8],
 };
 
@@ -28,14 +28,14 @@ export const REP_LADDER: Record<SlotId, number[]> = {
 export const SLOT_LABEL: Record<SlotId, string> = {
   swing: 'Swings',
   press: 'Clean and press',
-  windmill: 'Windmill',
+  lunge: 'Lunges',
   renegade: 'Renegade rows',
 };
 
 export const DEFAULT_CIRCUIT: CircuitEntry[] = [
   { exerciseId: 'single-arm-swing', repsPerSide: 10, weightKg: 12 },
   { exerciseId: 'clean-and-press', repsPerSide: 10, weightKg: 8 },
-  { exerciseId: 'low-windmill', repsPerSide: 10, weightKg: 8 },
+  { exerciseId: 'around-world-lunge', repsPerSide: 10, weightKg: 8 },
   { exerciseId: 'renegade-row-push-up', repsPerSide: 5, weightKg: 8 },
 ];
 
@@ -50,9 +50,6 @@ const sorted = (bells: number[]) => [...bells].sort((a, b) => a - b);
 export function nextStep(slot: SlotId, current: CircuitEntry, bellsKg: number[]): CircuitEntry | null {
   const bells = sorted(bellsKg);
   const reps = REP_LADDER[slot];
-  if (current.exerciseId === 'low-windmill') {
-    return { exerciseId: 'overhead-windmill', weightKg: bells[0], repsPerSide: reps[0] };
-  }
   const heavier = bells.find((b) => b > current.weightKg);
   if (heavier !== undefined) return { ...current, weightKg: heavier, repsPerSide: reps[0] };
   const moreReps = reps.find((r) => r > current.repsPerSide);
@@ -145,7 +142,7 @@ export function suggestions(history: KbHistoryItem[], bellsKg: number[], roundRe
 
   const top = Math.max(...bellsKg);
   const circuit = currentCircuit(history, bellsKg);
-  const allAtTop = circuit.every((c) => c.weightKg >= top && c.exerciseId !== 'low-windmill');
+  const allAtTop = circuit.every((c) => c.weightKg >= top);
   const lastTwo = history.slice(-2);
   // Both of the last two sessions must be clean at the current step for every slot, i.e. fully at the top bell.
   const lastTwoAtTop =
@@ -173,11 +170,7 @@ export function describeSuggestion(s: Suggestion): string {
   if (s.kind === 'rest') return `Rest between rounds: cut to ${s.toSec} s`;
   if (s.kind === 'ladder-end') return `${EXERCISES[s.current.exerciseId].name}: ready for a heavier bell`;
   const to = `${s.to.weightKg} kg × ${s.to.repsPerSide} per side`;
-  const from = EXERCISES[s.from.exerciseId].name;
-  if (s.to.exerciseId === s.from.exerciseId) return `${from}: move up to ${to}`;
-  // The only switch is from the low to the overhead windmill, whose own name is just "Windmill".
-  const toName = s.to.exerciseId === 'overhead-windmill' ? 'overhead windmill' : EXERCISES[s.to.exerciseId].name.toLowerCase();
-  return `${from}: switch to ${toName} at ${to}`;
+  return `${EXERCISES[s.from.exerciseId].name}: move up to ${to}`;
 }
 
 export function slotHistory(
