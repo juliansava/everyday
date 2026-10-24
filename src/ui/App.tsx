@@ -15,6 +15,7 @@ import { Gallery } from './screens/Gallery';
 import { KbPlayer } from './screens/KbPlayer';
 import { KbStart } from './screens/KbStart';
 import { MorningPlayer } from './screens/MorningPlayer';
+import { Progress } from './screens/Progress';
 import { SpinPlayer } from './screens/SpinPlayer';
 import { SpinStart } from './screens/SpinStart';
 import { Today } from './screens/Today';
@@ -163,6 +164,8 @@ function renderRoute(route: Route) {
       return <SpinPlayer key={route.sessionId} sessionId={route.sessionId} />;
     case 'finish':
       return <Finish key={route.sessionId} sessionId={route.sessionId} />;
+    case 'progress':
+      return <Progress />;
     default:
       return <Today />;
   }
