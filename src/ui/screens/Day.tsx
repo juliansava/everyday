@@ -39,6 +39,9 @@ function KbDetail({ sets }: { sets: SetRecord[] }) {
 function SpinDetail({ s }: { s: SessionRecord }) {
   const sum = s.summary ?? {};
   const avg = sum.avgBpm ?? sum.manualAvgBpm;
+  // A ride without a strap has no zone or interval data worth showing.
+  const hasHr = sum.avgBpm !== undefined;
+  const peaks = (sum.intervalPeaks ?? []).filter((p) => p > 0);
   return (
     <>
       <div class="row small">
@@ -49,7 +52,7 @@ function SpinDetail({ s }: { s: SessionRecord }) {
         <span>Average</span>
         <span>{avg ? `${avg} bpm` : '–'}</span>
       </div>
-      {s.kind === 'z2' && sum.zone2Share !== undefined && (
+      {s.kind === 'z2' && hasHr && sum.zone2Share !== undefined && (
         <div class="row small">
           <span>In zone 2</span>
           <span>
@@ -57,11 +60,11 @@ function SpinDetail({ s }: { s: SessionRecord }) {
           </span>
         </div>
       )}
-      {s.kind === 'z5' && sum.intervalPeaks && (
+      {s.kind === 'z5' && hasHr && peaks.length > 0 && (
         <>
           <div class="row small">
             <span>Interval peaks</span>
-            <span>{sum.intervalPeaks.join(' · ')}</span>
+            <span>{peaks.join(' · ')}</span>
           </div>
           <div class="row small">
             <span>Recovery after 60 s</span>
