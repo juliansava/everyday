@@ -7,7 +7,7 @@ import { Header } from '../components/Header';
 import { MissingSession } from '../components/MissingSession';
 import { useData, useInterceptBack, useSession } from '../data';
 import { completeSession } from '../flow';
-import { KIND_LABEL, mmss } from '../format';
+import { KIND_LABEL, mmss, peaksText, recoveryText } from '../format';
 
 const RATINGS: { value: Rating; label: string }[] = [
   { value: 'easy', label: 'Easy' },
@@ -159,11 +159,11 @@ function SpinFinish({ session }: { session: SessionRecord }) {
           <>
             <div class="stat">
               <div class="stat-label">Interval peaks</div>
-              <div class="stat-value">{(summary.intervalPeaks ?? []).join(' · ')}</div>
+              <div class="stat-value">{peaksText(summary.intervalPeaks)}</div>
             </div>
             <div class="stat">
               <div class="stat-label">Recovery after 60 s</div>
-              <div class="stat-value">{summary.hrRecovery === null ? '–' : `−${summary.hrRecovery} bpm`}</div>
+              <div class="stat-value">{recoveryText(summary.hrRecovery)}</div>
             </div>
           </>
         )}

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { dayName, estimatedMinutes, mmss, shortDate } from '../../src/ui/format';
+import { dayName, estimatedMinutes, mmss, peaksText, recoveryText, shortDate } from '../../src/ui/format';
 
 describe('format', () => {
   it('formats seconds as m:ss or h:mm:ss, rounding down', () => {
@@ -13,6 +13,20 @@ describe('format', () => {
   it('names days and short dates', () => {
     expect(dayName('2026-10-23')).toBe('Friday');
     expect(shortDate('2026-10-23')).toBe('23 Oct');
+  });
+
+  it('signs heart-rate recovery: a drop is minus, a rise is plus', () => {
+    expect(recoveryText(32)).toBe('−32 bpm');
+    expect(recoveryText(-3)).toBe('+3 bpm');
+    expect(recoveryText(0)).toBe('0 bpm');
+    expect(recoveryText(null)).toBe('–');
+    expect(recoveryText(undefined)).toBe('–');
+  });
+
+  it('lists interval peaks in bpm, leaving out intervals without a reading', () => {
+    expect(peaksText([176, 0, 181])).toBe('176 · 181 bpm');
+    expect(peaksText([0, 0])).toBe('–');
+    expect(peaksText(undefined)).toBe('–');
   });
 
   it('estimates session length in minutes', () => {

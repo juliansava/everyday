@@ -3,7 +3,7 @@ import { EXERCISES } from '../../program/exercises';
 import type { ExerciseId } from '../../program/types';
 import { Header } from '../components/Header';
 import { useData } from '../data';
-import { KIND_LABEL, dayName, mmss, shortDate } from '../format';
+import { KIND_LABEL, dayName, mmss, peaksText, recoveryText, shortDate } from '../format';
 
 const RATING_LABEL = { easy: 'Easy', right: 'Right', hard: 'Hard' } as const;
 
@@ -64,11 +64,11 @@ function SpinDetail({ s }: { s: SessionRecord }) {
         <>
           <div class="row small">
             <span>Interval peaks</span>
-            <span>{peaks.join(' · ')}</span>
+            <span>{peaksText(peaks)}</span>
           </div>
           <div class="row small">
             <span>Recovery after 60 s</span>
-            <span>{sum.hrRecovery == null ? '–' : `−${sum.hrRecovery} bpm`}</span>
+            <span>{recoveryText(sum.hrRecovery)}</span>
           </div>
         </>
       )}

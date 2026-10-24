@@ -45,7 +45,9 @@ export function Today() {
   const interrupted = resumable(sessions, Date.now());
 
   const minutes = (morningDone ? 0 : 5) + (next ? estimatedMinutes(next.kind, sessions) : 0);
-  const title = training ? `Morning + ${KIND_LABEL[training].toLowerCase()}` : 'Morning routine';
+  const withMorning = (kind: TrainingKind | null) => (kind ? `Morning + ${KIND_LABEL[kind].toLowerCase()}` : 'Morning routine');
+  // What's left to do today; once everything is done, what the day held.
+  const title = !morningDone ? withMorning(next?.kind ?? null) : next ? KIND_LABEL[next.kind] : withMorning(training);
 
   const run = async (action: () => Promise<void>) => {
     unlockAudio();
@@ -121,9 +123,12 @@ export function Today() {
         ) : (
           <>
             <p class="muted">About {minutes} min</p>
-            <button class="btn btn-primary" disabled={busy} onClick={start}>
-              {morningDone && next ? `Start ${KIND_LABEL[next.kind].toLowerCase()}` : 'Start'}
-            </button>
+            {/* While a session is interrupted, it's resumed or ended first, so it can't be done twice. */}
+            {!interrupted && (
+              <button class="btn btn-primary" disabled={busy} onClick={start}>
+                {morningDone && next ? `Start ${KIND_LABEL[next.kind].toLowerCase()}` : 'Start'}
+              </button>
+            )}
           </>
         )}
       </section>
@@ -150,7 +155,7 @@ export function Today() {
 
       {mondayLine && <p class="banner">{mondayLine}</p>}
 
-      {makeUps.slice(-1).map((m) => (
+      {!interrupted && makeUps.slice(-1).map((m) => (
         <button key={m.date} class="btn" disabled={busy} onClick={() => makeUp(m.date, m.kind)}>
           Make up: {dayName(m.date)} {KIND_LABEL[m.kind].toLowerCase()}
         </button>

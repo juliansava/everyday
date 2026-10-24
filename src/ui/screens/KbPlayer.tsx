@@ -209,8 +209,8 @@ function KbRun({ session }: { session: SessionRecord }) {
                 Pause
               </button>
             )}
-            <button class="btn" onClick={done}>
-              Skip rest
+            <button class="btn" disabled={runner.paused} onClick={done}>
+              {step.id === 'bells' ? 'Skip' : 'Skip rest'}
             </button>
           </div>
         </>

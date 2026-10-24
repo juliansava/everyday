@@ -11,6 +11,19 @@ export function mmss(sec: number): string {
   return h ? `${h}:${pad(m)}:${pad(s % 60)}` : `${m}:${pad(s % 60)}`;
 }
 
+/** Heart-rate recovery is the drop in bpm: shown as "−32 bpm", a rise as "+3 bpm". */
+export function recoveryText(drop: number | null | undefined): string {
+  if (drop == null) return '–';
+  if (drop === 0) return '0 bpm';
+  return drop > 0 ? `−${drop} bpm` : `+${-drop} bpm`;
+}
+
+/** Zone 5 interval peaks; an interval without a reading (0) is left out. */
+export function peaksText(peaks: number[] | undefined): string {
+  const real = (peaks ?? []).filter((p) => p > 0);
+  return real.length ? `${real.join(' · ')} bpm` : '–';
+}
+
 export const KIND_LABEL: Record<SessionKind, string> = {
   morning: 'Morning routine',
   kb: 'Kettlebell',

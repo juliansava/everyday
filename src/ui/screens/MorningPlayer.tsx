@@ -76,7 +76,7 @@ function MorningRun({ session, next }: { session: SessionRecord; next: Next }) {
       {upcoming && <p class="player-next">Next: {upcoming.title}</p>}
 
       <div class="player-controls">
-        <button class="btn" aria-label="Previous" onClick={back}>
+        <button class="btn" aria-label="Previous" disabled={runner.paused} onClick={back}>
           ⏮
         </button>
         {runner.paused ? (
@@ -88,7 +88,7 @@ function MorningRun({ session, next }: { session: SessionRecord; next: Next }) {
             Pause
           </button>
         )}
-        <button class="btn" aria-label="Skip" onClick={done}>
+        <button class="btn" aria-label="Skip" disabled={runner.paused} onClick={done}>
           ⏭
         </button>
       </div>

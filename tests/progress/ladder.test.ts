@@ -175,6 +175,14 @@ describe('suggestions', () => {
     expect(describeSuggestion({ kind: 'rest', fromSec: 90, toSec: 75 }))
       .toBe('Rest between rounds: cut to 75 s');
   });
+
+  it('names the overhead windmill when switching to it', () => {
+    expect(describeSuggestion({
+      kind: 'step', slot: 'windmill',
+      from: { exerciseId: 'low-windmill', weightKg: 12, repsPerSide: 15 },
+      to: { exerciseId: 'overhead-windmill', weightKg: 8, repsPerSide: 10 },
+    })).toBe('Low windmill: switch to overhead windmill at 8 kg × 10 per side');
+  });
 });
 
 describe('current circuit', () => {
@@ -222,5 +230,20 @@ describe('last-week line', () => {
     expect(lastWeekLine('2026-10-26', DEFAULT_TRAINING_DAYS, sessions, sets, BELLS))
       .toBe('Last week: 1 of 5. Swings moved up to 16 kg.');
     expect(lastWeekLine('2026-10-27', DEFAULT_TRAINING_DAYS, sessions, sets, BELLS)).toBeNull();
+  });
+
+  it("stays quiet on the first Monday when nothing was planned last week since starting", () => {
+    // Started on Saturday 24 Oct: last week's training days were all before the first session.
+    const morning: SessionRecord = {
+      id: 'm1', kind: 'morning', plannedDate: '2026-10-24', status: 'done', startedAt: 1, stepIndex: 0, params: {},
+    };
+    expect(lastWeekLine('2026-10-26', DEFAULT_TRAINING_DAYS, [morning], [], BELLS)).toBeNull();
+    expect(lastWeekLine('2026-10-26', DEFAULT_TRAINING_DAYS, [], [], BELLS)).toBeNull();
+  });
+
+  it('counts only the planned days since the first session in a first part-week', () => {
+    // Started on Wednesday 21 Oct: Wednesday, Thursday and Friday were planned (kb, z5, kb).
+    const kb = kbSession(DEFAULT_CIRCUIT, { date: '2026-10-21' });
+    expect(lastWeekLine('2026-10-26', DEFAULT_TRAINING_DAYS, [kb.session], kb.sets, BELLS)).toBe('Last week: 1 of 3.');
   });
 });

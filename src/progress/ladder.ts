@@ -1,10 +1,10 @@
 import type { RoundRest, SessionRecord, SetRecord } from '../model';
 import { EXERCISES } from '../program/exercises';
 import { KB_ROUNDS, type CircuitEntry } from '../program/routines';
-import { addDays, weekStart, weekdayOf, type TrainingDays } from '../program/schedule';
+import { addDays, trainingFor, weekDates, weekStart, weekdayOf, type TrainingDays } from '../program/schedule';
 import type { ExerciseId } from '../program/types';
 import { isComplete } from './session';
-import { plannedPerWeek } from './week';
+import { firstDay } from './week';
 
 export type SlotId = 'swing' | 'press' | 'windmill' | 'renegade';
 
@@ -172,9 +172,12 @@ export function applyStep(circuit: CircuitEntry[], s: Extract<Suggestion, { kind
 export function describeSuggestion(s: Suggestion): string {
   if (s.kind === 'rest') return `Rest between rounds: cut to ${s.toSec} s`;
   if (s.kind === 'ladder-end') return `${EXERCISES[s.current.exerciseId].name}: ready for a heavier bell`;
-  const toName = EXERCISES[s.to.exerciseId].name;
-  const what = s.to.exerciseId !== s.from.exerciseId ? `switch to ${toName}` : 'move up';
-  return `${EXERCISES[s.from.exerciseId].name}: ${what} to ${s.to.weightKg} kg × ${s.to.repsPerSide} per side`;
+  const to = `${s.to.weightKg} kg × ${s.to.repsPerSide} per side`;
+  const from = EXERCISES[s.from.exerciseId].name;
+  if (s.to.exerciseId === s.from.exerciseId) return `${from}: move up to ${to}`;
+  // The only switch is from the low to the overhead windmill, whose own name is just "Windmill".
+  const toName = s.to.exerciseId === 'overhead-windmill' ? 'overhead windmill' : EXERCISES[s.to.exerciseId].name.toLowerCase();
+  return `${from}: switch to ${toName} at ${to}`;
 }
 
 export function slotHistory(
@@ -198,10 +201,14 @@ export function lastWeekLine(
 ): string | null {
   if (weekdayOf(today) !== 0) return null;
   const lastMonday = addDays(today, -7);
+  // Only days since the first session count, so a first part-week isn't reported as missed.
+  const since = firstDay(sessions) ?? today;
+  const planned = weekDates(lastMonday).filter((date) => date >= since && trainingFor(date, days)).length;
+  if (planned === 0) return null;
   const done = sessions.filter(
     (s) => s.kind !== 'morning' && isComplete(s) && weekStart(s.plannedDate) === lastMonday,
   ).length;
-  let line = `Last week: ${done} of ${plannedPerWeek(days)}.`;
+  let line = `Last week: ${done} of ${planned}.`;
 
   const history = kbHistory(sessions, sets);
   const before = history.filter((h) => h.session.plannedDate < lastMonday);
