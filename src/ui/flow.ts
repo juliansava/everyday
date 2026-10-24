@@ -14,9 +14,12 @@ export async function beginMorning(d: AppData, next: Next): Promise<void> {
   d.go({ name: 'morning', sessionId: s.id, next });
 }
 
-/** Opens the start screen; the session itself is only created when the user taps Start there. */
-export async function beginTraining(d: AppData, kind: TrainingKind, plannedDate: string): Promise<void> {
-  d.go(kind === 'kb' ? { name: 'kb-start', plannedDate } : { name: 'spin-start', kind, plannedDate });
+/**
+ * Opens the start screen; the session itself is only created when the user taps Start there.
+ * `replace` is for the move straight on from the morning routine, which Back shouldn't return to.
+ */
+export async function beginTraining(d: AppData, kind: TrainingKind, plannedDate: string, replace = false): Promise<void> {
+  d.go(kind === 'kb' ? { name: 'kb-start', plannedDate } : { name: 'spin-start', kind, plannedDate }, { replace });
 }
 
 export async function beginSpin(d: AppData, kind: 'z2' | 'z5', plannedDate: string): Promise<void> {
@@ -27,14 +30,14 @@ export async function beginSpin(d: AppData, kind: 'z2' | 'z5', plannedDate: stri
   const s = newSession(kind, plannedDate, Date.now(), params);
   await d.store.putSession(s);
   await d.reload();
-  d.go({ name: 'spin', sessionId: s.id });
+  d.go({ name: 'spin', sessionId: s.id }, { replace: true });
 }
 
 export async function beginKb(d: AppData, plannedDate: string, circuit: CircuitEntry[]): Promise<void> {
   const s = newSession('kb', plannedDate, Date.now(), { circuit, roundRestSec: d.settings.roundRestSec });
   await d.store.putSession(s);
   await d.reload();
-  d.go({ name: 'kb', sessionId: s.id });
+  d.go({ name: 'kb', sessionId: s.id }, { replace: true });
 }
 
 /** Remembers where to resume. Doesn't reload, so it's cheap to call on every step. */

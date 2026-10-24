@@ -5,7 +5,7 @@ import { EXERCISES } from '../../program/exercises';
 import type { TapStep } from '../../program/types';
 import { routineFor } from '../../progress/session';
 import { MissingSession } from '../components/MissingSession';
-import { useData, useSession } from '../data';
+import { useData, useInterceptBack, useSession } from '../data';
 import { endPartial, saveProgress } from '../flow';
 import { mmss } from '../format';
 import { useRunner } from '../useRunner';
@@ -34,6 +34,7 @@ function KbRun({ session }: { session: SessionRecord }) {
   /** The sets just saved, and the index of the tap step they came from. */
   const [undo, setUndo] = useState<{ ids: string[]; stepIndex: number } | null>(null);
   const [confirmEnd, setConfirmEnd] = useState(false);
+  useInterceptBack(() => setConfirmEnd(true));
   const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const held = useRef(false);
 
@@ -42,7 +43,7 @@ function KbRun({ session }: { session: SessionRecord }) {
     onFinish: async () => {
       // The end time is kept, so Finish shows the workout's time however long it's left open.
       await saveProgress(d, { ...session, endedAt: Date.now() }, steps.length);
-      d.go({ name: 'finish', sessionId: session.id });
+      d.go({ name: 'finish', sessionId: session.id }, { replace: true });
     },
   });
 

@@ -5,7 +5,7 @@ import { spinSummary } from '../../progress/cardio';
 import { kbTotalReps, routineFor } from '../../progress/session';
 import { Header } from '../components/Header';
 import { MissingSession } from '../components/MissingSession';
-import { useData, useSession } from '../data';
+import { useData, useInterceptBack, useSession } from '../data';
 import { completeSession } from '../flow';
 import { KIND_LABEL, mmss } from '../format';
 
@@ -26,6 +26,8 @@ function KbFinish({ session }: { session: SessionRecord }) {
   const [sets, setSets] = useState<SetRecord[] | null>(null);
   const [note, setNote] = useState('');
   const [busy, setBusy] = useState(false);
+  const [saveFirst, setSaveFirst] = useState(false);
+  useInterceptBack(() => setSaveFirst(true));
   useEffect(() => {
     void d.store.setsFor(session.id).then(setSets);
   }, [session.id]);
@@ -45,6 +47,11 @@ function KbFinish({ session }: { session: SessionRecord }) {
   return (
     <main class="screen">
       <Header title="Kettlebell done" />
+      {saveFirst && (
+        <p class="banner" role="alert">
+          Save this session first: tap how it felt.
+        </p>
+      )}
       <section class="stats">
         <div class="stat">
           <div class="stat-label">Total reps</div>
@@ -84,6 +91,8 @@ function SpinFinish({ session }: { session: SessionRecord }) {
   const [manualError, setManualError] = useState<string | null>(null);
   const [updateMax, setUpdateMax] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [saveFirst, setSaveFirst] = useState(false);
+  useInterceptBack(() => setSaveFirst(true));
   useEffect(() => {
     void d.store.getTrace(session.id).then((t) => setBpm(t?.bpm ?? []));
   }, [session.id]);
@@ -120,6 +129,11 @@ function SpinFinish({ session }: { session: SessionRecord }) {
   return (
     <main class="screen">
       <Header title={`${KIND_LABEL[session.kind]} done`} />
+      {saveFirst && (
+        <p class="banner" role="alert">
+          Save this ride first: tap Save ride.
+        </p>
+      )}
       <section class="stats">
         <div class="stat">
           <div class="stat-label">Time</div>

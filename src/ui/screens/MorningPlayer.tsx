@@ -3,7 +3,7 @@ import { Figure } from '../../art/Figure';
 import type { SessionRecord } from '../../model';
 import { morningRoutine } from '../../program/routines';
 import { MissingSession } from '../components/MissingSession';
-import { useData, useSession, type Next } from '../data';
+import { useData, useInterceptBack, useSession, type Next } from '../data';
 import { beginTraining, completeSession, endPartial, saveProgress } from '../flow';
 import { mmss } from '../format';
 import { useRunner } from '../useRunner';
@@ -17,12 +17,13 @@ function MorningRun({ session, next }: { session: SessionRecord; next: Next }) {
   const d = useData();
   const steps = useMemo(() => morningRoutine(), []);
   const [confirmEnd, setConfirmEnd] = useState(false);
+  useInterceptBack(() => setConfirmEnd(true));
 
   const { runner, done, back, pause, resume } = useRunner(steps, session.stepIndex, d.settings, {
     onStep: (i) => void saveProgress(d, session, i),
     onFinish: async () => {
       await completeSession(d, session);
-      if (next) await beginTraining(d, next.kind, next.plannedDate);
+      if (next) await beginTraining(d, next.kind, next.plannedDate, true);
       else d.go({ name: 'today' });
     },
   });

@@ -11,7 +11,7 @@ import { resumePoint, spinSummary } from '../../progress/cardio';
 import { routineFor } from '../../progress/session';
 import { SPEED } from '../clock';
 import { MissingSession } from '../components/MissingSession';
-import { useData, useSession } from '../data';
+import { useData, useInterceptBack, useSession } from '../data';
 import { endPartial, saveProgress } from '../flow';
 import { KIND_LABEL, mmss } from '../format';
 import { useHr } from '../useHr';
@@ -57,6 +57,7 @@ function Ride({ session, stored }: { session: SessionRecord; stored: number[] })
   const lastFlush = useRef(offset);
   const prevStatus = useRef<HrStatus>(d.hr.status());
   const [confirmEnd, setConfirmEnd] = useState(false);
+  useInterceptBack(() => setConfirmEnd(true));
   const { status, latest } = useHr(d.hr);
 
   const flush = () =>
@@ -87,7 +88,7 @@ function Ride({ session, stored }: { session: SessionRecord; stored: number[] })
       d.hr.disconnect();
       await flush();
       await saveProgress(d, { ...session, endedAt: Date.now() }, steps.length);
-      d.go({ name: 'finish', sessionId: session.id });
+      d.go({ name: 'finish', sessionId: session.id }, { replace: true });
     },
   }, start.offsetSec);
 

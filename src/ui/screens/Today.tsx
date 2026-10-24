@@ -27,7 +27,7 @@ export function Today() {
     if (kind !== 'kb' && kind !== 'z2' && kind !== 'z5') return;
     const url = new URL(location.href);
     url.searchParams.delete('start');
-    history.replaceState(null, '', url);
+    history.replaceState(history.state, '', url);
     void beginTraining(d, kind, today);
   }, []);
 
