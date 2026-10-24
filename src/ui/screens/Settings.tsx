@@ -1,4 +1,4 @@
-import { useState } from 'preact/hooks';
+import { useRef, useState } from 'preact/hooks';
 import { describeBackup, exportBackup, importBackup, parseBackup, shareOrDownload, type Backup } from '../../db/backup';
 import type { RoundRest, Settings } from '../../model';
 import type { TrainingKind, Weekday } from '../../program/types';
@@ -22,7 +22,14 @@ export function SettingsScreen() {
   const [backupMsg, setBackupMsg] = useState<string | null>(null);
   const [backupError, setBackupError] = useState<string | null>(null);
 
-  const save = (patch: Partial<Settings>) => d.saveSettings({ ...d.settings, ...patch });
+  // Writes run one at a time, each merged onto freshly read settings, so a tap straight after a
+  // blur-triggered save never writes back a stale snapshot.
+  const chain = useRef<Promise<unknown>>(Promise.resolve());
+  const save = (patch: Partial<Settings>): Promise<void> => {
+    const run = chain.current.then(async () => d.saveSettings({ ...(await d.store.getSettings()), ...patch }));
+    chain.current = run.catch(() => {});
+    return run;
+  };
 
   const typed = Number(maxHr);
   const validHr = Number.isInteger(typed) && typed >= 120 && typed <= 230;
