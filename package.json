@@ -9,7 +9,7 @@
     "preview": "vite preview --host",
     "test": "vitest run",
     "test:watch": "vitest",
-    "icons": "pwa-assets-generator --preset minimal-2023 public/icons/icon.svg"
+    "icons": "pwa-assets-generator"
   },
   "dependencies": {
     "idb": "^8.0.0",
