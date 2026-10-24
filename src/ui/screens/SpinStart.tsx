@@ -1,4 +1,4 @@
-import { useState } from 'preact/hooks';
+import { useEffect, useRef, useState } from 'preact/hooks';
 import { unlockAudio } from '../../cues/browser';
 import { zone2, zone5 } from '../../program/zones';
 import { nextZone2MainMin } from '../../progress/cardio';
@@ -13,6 +13,14 @@ export function SpinStart({ kind, plannedDate }: { kind: 'z2' | 'z5'; plannedDat
   const { status } = useHr(d.hr);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const started = useRef(false);
+  const mounted = useRef(true);
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
 
   const z = kind === 'z2' ? zone2(d.settings.maxHr) : zone5(d.settings.maxHr);
   const plan =
@@ -21,6 +29,9 @@ export function SpinStart({ kind, plannedDate }: { kind: 'z2' | 'z5'; plannedDat
       : `10 min warm-up · 4 × 4 min at ${z.low}–${z.high} bpm with 3 min easy between · 5 min cool-down`;
 
   const go = async () => {
+    // A ride starts at most once, and never after the screen has gone (e.g. Back during a slow connect).
+    if (started.current || !mounted.current) return;
+    started.current = true;
     setBusy(true);
     await beginSpin(d, kind, plannedDate);
   };
@@ -66,11 +77,11 @@ export function SpinStart({ kind, plannedDate }: { kind: 'z2' | 'z5'; plannedDat
       )}
       {error && <p class="error">{error}</p>}
       {error && (
-        <button class="btn" disabled={busy} onClick={() => connectAndGo(true)}>
+        <button class="btn" disabled={busy || status === 'connecting'} onClick={() => connectAndGo(true)}>
           Pick a different strap
         </button>
       )}
-      <button class="btn" disabled={busy} onClick={withoutStrap}>
+      <button class="btn" disabled={busy || status === 'connecting'} onClick={withoutStrap}>
         Ride without strap
       </button>
     </main>

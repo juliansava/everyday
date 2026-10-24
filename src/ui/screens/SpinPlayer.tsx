@@ -38,7 +38,8 @@ function Ride({ session }: { session: SessionRecord }) {
   const steps = useMemo(() => routineFor(session) as TimedStep[], [session.id]);
   const windows = useMemo(() => stepWindows(steps), [steps]);
   const total = totalSec(steps);
-  const startIndex = session.stepIndex;
+  // Frozen at mount: saveProgress and data reloads keep changing session.stepIndex mid-ride.
+  const [startIndex] = useState(() => session.stepIndex);
   // Seconds of the ride before the step we (re)start at; the trace is aligned to step boundaries.
   const offset = windows[startIndex]?.start ?? total;
 
