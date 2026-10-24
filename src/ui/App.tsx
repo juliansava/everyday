@@ -14,6 +14,8 @@ import { Gallery } from './screens/Gallery';
 import { KbPlayer } from './screens/KbPlayer';
 import { KbStart } from './screens/KbStart';
 import { MorningPlayer } from './screens/MorningPlayer';
+import { SpinPlayer } from './screens/SpinPlayer';
+import { SpinStart } from './screens/SpinStart';
 import { Today } from './screens/Today';
 
 interface Loaded {
@@ -153,6 +155,10 @@ function renderRoute(route: Route) {
       return <KbStart plannedDate={route.plannedDate} />;
     case 'kb':
       return <KbPlayer key={route.sessionId} sessionId={route.sessionId} />;
+    case 'spin-start':
+      return <SpinStart kind={route.kind} plannedDate={route.plannedDate} />;
+    case 'spin':
+      return <SpinPlayer key={route.sessionId} sessionId={route.sessionId} />;
     case 'finish':
       return <Finish key={route.sessionId} sessionId={route.sessionId} />;
     default:
