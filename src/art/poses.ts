@@ -56,6 +56,11 @@ const SWING_TOP: Pose = [52,13, 48,22, 46,52, 50,36, 52,50, 62,24, 76,24, 47,72,
 const RR_PLANK: Pose = [82,52, 74,56, 44,73, 73,73, 72,90, 74,72, 73,86, 29,81, 14,90, 30,81, 15,90];
 const RR_ROW: Pose = [82,52, 74,56, 44,73, 73,73, 72,90, 62,50, 66,64, 29,81, 14,90, 30,81, 15,90];
 const RR_BOTTOM: Pose = [82,77, 74,80, 44,85, 62,74, 72,90, 63,73, 73,86, 29,88, 14,90, 30,88, 15,90];
+const GR_DOWN: Pose = [73,50, 66,52, 38,54, 60,62, 52,68, 64,68, 62,84, 46,72, 44,92, 34,72, 32,92];
+const GR_UP: Pose = [73,50, 66,52, 38,54, 60,62, 52,68, 54,44, 58,60, 46,72, 44,92, 34,72, 32,92];
+// Front view: bell pressed overhead, then lowered behind the head
+const TRI_UP: Pose = [50,14, 50,22, 50,52, 46,8, 49,2, 54,8, 51,2, 46,72, 45,92, 54,72, 55,92];
+const TRI_DOWN: Pose = [50,14, 50,22, 50,52, 42,6, 48,18, 58,6, 52,18, 46,72, 45,92, 54,72, 55,92];
 
 export const DRAWINGS: Record<ExerciseId, Drawing> = {
   'lymphatic-hops': { frames: [HOP_DOWN, HOP_UP, HOP_DOWN], durationSec: 0.6, bell: null },
@@ -81,5 +86,12 @@ export const DRAWINGS: Record<ExerciseId, Drawing> = {
     frames: [RR_PLANK, RR_ROW, RR_PLANK, RR_BOTTOM, RR_PLANK],
     durationSec: 4.5,
     bell: 'r',
+  },
+  'gorilla-row': { frames: [GR_DOWN, GR_UP, GR_DOWN], durationSec: 2, bell: 'r' },
+  // One halo, then press up and extend behind the head
+  'halo-tricep-extension': {
+    frames: [HALO_L, HALO_TOP, HALO_R, HALO_FRONT, TRI_UP, TRI_DOWN, TRI_UP, HALO_L],
+    durationSec: 6,
+    bell: 'both',
   },
 };

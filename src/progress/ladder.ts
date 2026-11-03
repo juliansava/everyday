@@ -6,22 +6,24 @@ import type { ExerciseId } from '../program/types';
 import { isComplete } from './session';
 import { firstDay } from './week';
 
-export type SlotId = 'swing' | 'press' | 'lunge' | 'renegade';
+export type SlotId = 'swing' | 'press' | 'lunge' | 'row' | 'halo';
 
-export const SLOTS: SlotId[] = ['swing', 'press', 'lunge', 'renegade'];
+export const SLOTS: SlotId[] = ['swing', 'press', 'lunge', 'row', 'halo'];
 
 export const SLOT_EXERCISES: Record<SlotId, ExerciseId[]> = {
   swing: ['single-arm-swing'],
   press: ['clean-and-press'],
   lunge: ['around-world-lunge'],
-  renegade: ['renegade-row-push-up'],
+  row: ['gorilla-row'],
+  halo: ['halo-tricep-extension'],
 };
 
 export const REP_LADDER: Record<SlotId, number[]> = {
   swing: [10, 12, 15],
   press: [10, 12, 15],
   lunge: [10, 12, 15],
-  renegade: [5, 6, 8],
+  row: [10, 12, 15],
+  halo: [10, 12, 15],
 };
 
 /** Used in the Monday summary line. */
@@ -29,14 +31,16 @@ export const SLOT_LABEL: Record<SlotId, string> = {
   swing: 'Swings',
   press: 'Clean and press',
   lunge: 'Lunges',
-  renegade: 'Renegade rows',
+  row: 'Gorilla rows',
+  halo: 'Halo and tricep extensions',
 };
 
 export const DEFAULT_CIRCUIT: CircuitEntry[] = [
   { exerciseId: 'single-arm-swing', repsPerSide: 10, weightKg: 12 },
   { exerciseId: 'clean-and-press', repsPerSide: 10, weightKg: 8 },
   { exerciseId: 'around-world-lunge', repsPerSide: 10, weightKg: 8 },
-  { exerciseId: 'renegade-row-push-up', repsPerSide: 5, weightKg: 8 },
+  { exerciseId: 'gorilla-row', repsPerSide: 10, weightKg: 12 },
+  { exerciseId: 'halo-tricep-extension', repsPerSide: 10, weightKg: 8 },
 ];
 
 export const REST_STEPS: RoundRest[] = [90, 75, 60];
@@ -169,7 +173,7 @@ export function applyStep(circuit: CircuitEntry[], s: Extract<Suggestion, { kind
 export function describeSuggestion(s: Suggestion): string {
   if (s.kind === 'rest') return `Rest between rounds: cut to ${s.toSec} s`;
   if (s.kind === 'ladder-end') return `${EXERCISES[s.current.exerciseId].name}: ready for a heavier bell`;
-  const to = `${s.to.weightKg} kg × ${s.to.repsPerSide} per side`;
+  const to = `${s.to.weightKg} kg × ${s.to.repsPerSide}${EXERCISES[s.to.exerciseId].perSide ? ' per side' : ''}`;
   return `${EXERCISES[s.from.exerciseId].name}: move up to ${to}`;
 }
 

@@ -51,11 +51,12 @@ describe('session helpers', () => {
           { exerciseId: 'single-arm-swing', repsPerSide: 10, weightKg: 12 },
           { exerciseId: 'clean-and-press', repsPerSide: 10, weightKg: 8 },
           { exerciseId: 'around-world-lunge', repsPerSide: 10, weightKg: 8 },
-          { exerciseId: 'renegade-row-push-up', repsPerSide: 5, weightKg: 8 },
+          { exerciseId: 'gorilla-row', repsPerSide: 10, weightKg: 12 },
+          { exerciseId: 'halo-tricep-extension', repsPerSide: 10, weightKg: 8 },
         ],
       },
     });
-    expect(routineFor(kb)).toHaveLength(17);
+    expect(routineFor(kb)).toHaveLength(22);
     expect(() => routineFor(mk({ kind: 'kb' }))).toThrow('has no circuit');
   });
 

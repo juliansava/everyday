@@ -63,7 +63,7 @@ export function Progress() {
             return (
               <div key={slot} class="field">
                 <span>
-                  {EXERCISES[now.exerciseId].name}: {now.weightKg} kg × {now.repsPerSide} per side
+                  {EXERCISES[now.exerciseId].name}: {now.weightKg} kg × {now.repsPerSide}{EXERCISES[now.exerciseId].perSide ? ' per side' : ''}
                 </span>
                 <span class="muted small">
                   {up

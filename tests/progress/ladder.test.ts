@@ -35,10 +35,10 @@ describe('nextStep', () => {
       .toEqual({ exerciseId: 'around-world-lunge', weightKg: 12, repsPerSide: 10 });
   });
 
-  it('uses 5 → 6 → 8 reps per side for renegade rows', () => {
-    const at16 = { exerciseId: 'renegade-row-push-up' as const, weightKg: 16, repsPerSide: 5 };
-    expect(nextStep('renegade', at16, BELLS)).toEqual({ ...at16, repsPerSide: 6 });
-    expect(nextStep('renegade', { ...at16, repsPerSide: 8 }, BELLS)).toBeNull();
+  it('adds reps to the gorilla row at the heaviest bell, then ends', () => {
+    const at16 = { exerciseId: 'gorilla-row' as const, weightKg: 16, repsPerSide: 10 };
+    expect(nextStep('row', at16, BELLS)).toEqual({ ...at16, repsPerSide: 12 });
+    expect(nextStep('row', { ...at16, repsPerSide: 15 }, BELLS)).toBeNull();
   });
 
   it('picks up a newly added heavier bell', () => {
@@ -103,7 +103,7 @@ describe('suggestions', () => {
   it('resets only the exercise with missed reps', () => {
     const h = history(kbSession(DEFAULT_CIRCUIT), kbSession(DEFAULT_CIRCUIT, { missed: ['clean-and-press'] }));
     const slots = suggestions(h, BELLS, 90).map((s) => ('slot' in s ? s.slot : s.kind));
-    expect(slots).toEqual(['swing', 'lunge', 'renegade']);
+    expect(slots).toEqual(['swing', 'lunge', 'row', 'halo']);
   });
 
   it('reports the end of a ladder', () => {
@@ -131,7 +131,8 @@ describe('suggestions', () => {
       { exerciseId: 'single-arm-swing', weightKg: 16, repsPerSide: 12 },
       { exerciseId: 'clean-and-press', weightKg: 16, repsPerSide: 10 },
       { exerciseId: 'around-world-lunge', weightKg: 16, repsPerSide: 10 },
-      { exerciseId: 'renegade-row-push-up', weightKg: 16, repsPerSide: 5 },
+      { exerciseId: 'gorilla-row', weightKg: 16, repsPerSide: 10 },
+      { exerciseId: 'halo-tricep-extension', weightKg: 16, repsPerSide: 10 },
     ];
     const h = history(kbSession(top), kbSession(top));
     expect(suggestions(h, BELLS, 90)).toContainEqual({ kind: 'rest', fromSec: 90, toSec: 75 });
@@ -148,16 +149,17 @@ describe('suggestions', () => {
       { exerciseId: 'single-arm-swing', weightKg: 16, repsPerSide: 12 },
       { exerciseId: 'clean-and-press', weightKg: 16, repsPerSide: 10 },
       { exerciseId: 'around-world-lunge', weightKg: 16, repsPerSide: 10 },
-      { exerciseId: 'renegade-row-push-up', weightKg: 16, repsPerSide: 5 },
+      { exerciseId: 'gorilla-row', weightKg: 16, repsPerSide: 10 },
+      { exerciseId: 'halo-tricep-extension', weightKg: 16, repsPerSide: 10 },
     ];
-    const renegadeAt12: CircuitEntry[] = top.map((c) =>
-      c.exerciseId === 'renegade-row-push-up' ? { ...c, weightKg: 12 } : c,
+    const rowAt12: CircuitEntry[] = top.map((c) =>
+      c.exerciseId === 'gorilla-row' ? { ...c, weightKg: 12 } : c,
     );
-    // One all-top session after a clean session with renegade rows at 12 kg is not enough yet.
-    expect(suggestions(history(kbSession(renegadeAt12), kbSession(top)), BELLS, 90)
+    // One all-top session after a clean session with gorilla rows at 12 kg is not enough yet.
+    expect(suggestions(history(kbSession(rowAt12), kbSession(top)), BELLS, 90)
       .some((s) => s.kind === 'rest')).toBe(false);
     // A second all-top clean session makes the last two both fully at the top.
-    expect(suggestions(history(kbSession(renegadeAt12), kbSession(top), kbSession(top)), BELLS, 90))
+    expect(suggestions(history(kbSession(rowAt12), kbSession(top), kbSession(top)), BELLS, 90))
       .toContainEqual({ kind: 'rest', fromSec: 90, toSec: 75 });
   });
 
@@ -167,6 +169,11 @@ describe('suggestions', () => {
       from: { exerciseId: 'single-arm-swing', weightKg: 12, repsPerSide: 10 },
       to: { exerciseId: 'single-arm-swing', weightKg: 16, repsPerSide: 10 },
     })).toBe('Single-arm swing: move up to 16 kg × 10 per side');
+    expect(describeSuggestion({
+      kind: 'step', slot: 'halo',
+      from: { exerciseId: 'halo-tricep-extension', weightKg: 8, repsPerSide: 10 },
+      to: { exerciseId: 'halo-tricep-extension', weightKg: 12, repsPerSide: 10 },
+    })).toBe('Halo + overhead tricep extension: move up to 12 kg × 10');
     expect(describeSuggestion({
       kind: 'ladder-end', slot: 'press',
       current: { exerciseId: 'clean-and-press', weightKg: 16, repsPerSide: 15 },

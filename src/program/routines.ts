@@ -81,20 +81,18 @@ export interface KbPlan {
   roundRestSec: number;
 }
 
-export const WARMUP_ROUNDS = 2;
+export const WARMUP_ROUNDS = 4;
 export const KB_ROUNDS = 3;
 export const BELLS_SEC = 60;
 
 const WARMUP_ITEMS: TapItem[] = [
-  { exerciseId: 'bw-squat', reps: 10 },
   { exerciseId: 'push-up', reps: 10 },
-  { exerciseId: 'halo', reps: 10 },
+  { exerciseId: 'bw-squat', reps: 10 },
 ];
 
 const WARMUP_SPOKEN: Partial<Record<ExerciseId, string>> = {
   'bw-squat': 'squats',
   'push-up': 'push-ups',
-  halo: 'halos',
 };
 
 export function kbRoutine(plan: KbPlan): Step[] {
@@ -167,7 +165,8 @@ export function announce(step: TapStep): string {
 // ---------- Spin ----------
 
 export const Z2_START_MAIN_MIN = 45;
-export const Z2_MAX_MAIN_MIN = 60;
+// Morning routine (5) + warm-up (5) + main block + cool-down (5) must fit in an hour.
+export const Z2_MAX_MAIN_MIN = 45;
 export const Z2_STEP_MIN = 5;
 export const Z5_INTERVALS = 4;
 

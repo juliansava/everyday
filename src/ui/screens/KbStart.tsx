@@ -70,7 +70,7 @@ export function KbStart({ plannedDate }: { plannedDate: string }) {
         {circuit.map((entry, i) => (
           <div key={entry.exerciseId} class="field">
             <span>
-              {EXERCISES[entry.exerciseId].name} · {entry.repsPerSide} per side
+              {EXERCISES[entry.exerciseId].name} · {entry.repsPerSide}{EXERCISES[entry.exerciseId].perSide ? ' per side' : ' reps'}
             </span>
             <div class="chips">
               {bells.map((kg) => (
@@ -84,7 +84,7 @@ export function KbStart({ plannedDate }: { plannedDate: string }) {
       </section>
 
       <p class="muted small">
-        Warm-up: 2 rounds of 10 squats, 10 push-ups and 10 halos. Then 3 rounds of the circuit with{' '}
+        Warm-up: 4 rounds of 10 push-ups and 10 squats. Then 3 rounds of the circuit with{' '}
         {settings.roundRestSec} s rest between rounds.
       </p>
       <button class="btn btn-primary" disabled={busy} onClick={start}>

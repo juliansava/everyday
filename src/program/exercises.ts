@@ -79,10 +79,23 @@ export const EXERCISES: Record<ExerciseId, Exercise> = {
     cue: 'Circle the bell around your torso as you step back into a lunge; drive up through the front heel.',
     perSide: true,
   },
+  // No longer in the circuit; kept so older sessions still show their sets.
   'renegade-row-push-up': {
     id: 'renegade-row-push-up',
     name: 'Renegade row and push-up',
     cue: 'Plank with one hand on the bell, row without twisting, then a push-up.',
     perSide: true,
+  },
+  'gorilla-row': {
+    id: 'gorilla-row',
+    name: 'Gorilla row',
+    cue: 'Wide stance, hinge low, bell between your feet; row it to your hip without twisting, then switch sides.',
+    perSide: true,
+  },
+  'halo-tricep-extension': {
+    id: 'halo-tricep-extension',
+    name: 'Halo + overhead tricep extension',
+    cue: 'Bell by the horns: one halo around your head, press it up, lower it behind your head and extend. Alternate the halo direction.',
+    perSide: false,
   },
 };

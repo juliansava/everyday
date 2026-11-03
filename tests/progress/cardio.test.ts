@@ -93,8 +93,8 @@ describe('zone 2 progression', () => {
     expect(nextZone2MainMin([])).toBe(45);
   });
 
-  it('adds 5 minutes after two rides at the current length with 80 % in zone', () => {
-    expect(nextZone2MainMin([z2At(45, 0.85), z2At(45, 0.8)])).toBe(50);
+  it('stays at 45 minutes after good rides, so a ride day fits in an hour', () => {
+    expect(nextZone2MainMin([z2At(45, 0.85), z2At(45, 0.8)])).toBe(45);
   });
 
   it('does not count rides with less than 80 % in zone', () => {
@@ -105,9 +105,9 @@ describe('zone 2 progression', () => {
     expect(nextZone2MainMin([z2At(45, 0.9), z2At(50, 0.9)])).toBe(45);
   });
 
-  it('caps at 60 minutes', () => {
+  it('never goes above 45 minutes, even after older, longer rides', () => {
     const rides = [45, 45, 50, 50, 55, 55, 60, 60].map((m) => z2At(m, 0.9));
-    expect(nextZone2MainMin(rides)).toBe(60);
+    expect(nextZone2MainMin(rides)).toBe(45);
   });
 });
 

@@ -44,7 +44,7 @@ export function estimatedMinutes(kind: SessionKind, sessions: SessionRecord[]): 
     case 'morning':
       return 5;
     case 'kb':
-      return 35;
+      return 40;
     case 'z2':
       return 10 + nextZone2MainMin(sessions);
     case 'z5':

@@ -49,46 +49,47 @@ describe('kettlebell routine', () => {
       { exerciseId: 'single-arm-swing', repsPerSide: 10, weightKg: 12 },
       { exerciseId: 'clean-and-press', repsPerSide: 10, weightKg: 8 },
       { exerciseId: 'around-world-lunge', repsPerSide: 10, weightKg: 8 },
-      { exerciseId: 'renegade-row-push-up', repsPerSide: 5, weightKg: 8 },
+      { exerciseId: 'gorilla-row', repsPerSide: 10, weightKg: 12 },
+      { exerciseId: 'halo-tricep-extension', repsPerSide: 10, weightKg: 8 },
     ],
   };
   const steps = kbRoutine(plan);
 
-  it('has 2 warm-up taps, the bells countdown, 12 circuit taps and 2 rests', () => {
+  it('has 4 warm-up taps, the bells countdown, 15 circuit taps and 2 rests', () => {
     expect(steps.map((s) => s.id)).toEqual([
-      'wu-1', 'wu-2', 'bells',
-      'c-1-0', 'c-1-1', 'c-1-2', 'c-1-3', 'rest-1',
-      'c-2-0', 'c-2-1', 'c-2-2', 'c-2-3', 'rest-2',
-      'c-3-0', 'c-3-1', 'c-3-2', 'c-3-3',
+      'wu-1', 'wu-2', 'wu-3', 'wu-4', 'bells',
+      'c-1-0', 'c-1-1', 'c-1-2', 'c-1-3', 'c-1-4', 'rest-1',
+      'c-2-0', 'c-2-1', 'c-2-2', 'c-2-3', 'c-2-4', 'rest-2',
+      'c-3-0', 'c-3-1', 'c-3-2', 'c-3-3', 'c-3-4',
     ]);
   });
 
-  it('lists squats, push-ups and halos in each warm-up round', () => {
+  it('lists push-ups and squats in each warm-up round', () => {
     const wu = steps[0] as TapStep;
     expect(wu.items).toEqual([
-      { exerciseId: 'bw-squat', reps: 10 },
       { exerciseId: 'push-up', reps: 10 },
-      { exerciseId: 'halo', reps: 10 },
+      { exerciseId: 'bw-squat', reps: 10 },
     ]);
     expect(wu.weightKg).toBeNull();
   });
 
   it('carries reps and bell weight on each circuit tap', () => {
-    expect(steps[3]).toMatchObject({
+    expect(steps[5]).toMatchObject({
       kind: 'tap', block: 'circuit', round: 1, weightKg: 12,
       items: [{ exerciseId: 'single-arm-swing', reps: 10 }],
     });
   });
 
   it('uses 60 s to get the bells and the planned rest between rounds', () => {
-    expect(steps[2]).toMatchObject({ kind: 'timed', durationSec: 60 });
-    expect(steps[7]).toMatchObject({ kind: 'timed', durationSec: 90 });
-    expect(kbRoutine({ ...plan, roundRestSec: 60 })[7]).toMatchObject({ durationSec: 60 });
+    expect(steps[4]).toMatchObject({ kind: 'timed', durationSec: 60 });
+    expect(steps[10]).toMatchObject({ kind: 'timed', durationSec: 90 });
+    expect(kbRoutine({ ...plan, roundRestSec: 60 })[10]).toMatchObject({ durationSec: 60 });
   });
 
   it('announces tap steps in plain words', () => {
-    expect(announce(steps[0] as TapStep)).toBe('Warm-up round 1. 10 squats, 10 push-ups, 10 halos');
-    expect(announce(steps[3] as TapStep)).toBe('Single-arm swing. 10 per side. 12 kilos');
+    expect(announce(steps[0] as TapStep)).toBe('Warm-up round 1. 10 push-ups, 10 squats');
+    expect(announce(steps[5] as TapStep)).toBe('Single-arm swing. 10 per side. 12 kilos');
+    expect(announce(steps[9] as TapStep)).toBe('Halo + overhead tricep extension. 10. 8 kilos');
   });
 });
 

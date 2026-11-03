@@ -6,11 +6,11 @@ const ALL_IDS = [
   'deep-squat-hold', 'hurdler-stretch', 'deep-breaths',
   'bw-squat', 'push-up', 'halo',
   'single-arm-swing', 'clean-and-press', 'around-world-lunge',
-  'renegade-row-push-up',
+  'renegade-row-push-up', 'gorilla-row', 'halo-tricep-extension',
 ];
 
 describe('exercise catalog', () => {
-  it('has exactly the 14 exercises in the program', () => {
+  it('has exactly the 16 exercises in the program', () => {
     expect(Object.keys(EXERCISES).sort()).toEqual([...ALL_IDS].sort());
   });
 
@@ -24,7 +24,8 @@ describe('exercise catalog', () => {
 
   it('marks one-sided movements as per side', () => {
     expect(EXERCISES['single-arm-swing'].perSide).toBe(true);
-    expect(EXERCISES['renegade-row-push-up'].perSide).toBe(true);
+    expect(EXERCISES['gorilla-row'].perSide).toBe(true);
+    expect(EXERCISES['halo-tricep-extension'].perSide).toBe(false);
     expect(EXERCISES['bw-squat'].perSide).toBe(false);
     expect(EXERCISES['halo'].perSide).toBe(false);
   });

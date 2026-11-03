@@ -31,7 +31,7 @@ describe('format', () => {
 
   it('estimates session length in minutes', () => {
     expect(estimatedMinutes('morning', [])).toBe(5);
-    expect(estimatedMinutes('kb', [])).toBe(35);
+    expect(estimatedMinutes('kb', [])).toBe(40);
     expect(estimatedMinutes('z2', [])).toBe(55);
     expect(estimatedMinutes('z5', [])).toBe(40);
   });

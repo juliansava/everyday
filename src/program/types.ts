@@ -12,7 +12,9 @@ export type ExerciseId =
   | 'single-arm-swing'
   | 'clean-and-press'
   | 'around-world-lunge'
-  | 'renegade-row-push-up';
+  | 'renegade-row-push-up'
+  | 'gorilla-row'
+  | 'halo-tricep-extension';
 
 export interface Exercise {
   id: ExerciseId;

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { Figure } from '../../art/Figure';
 import type { SessionRecord, SetRecord } from '../../model';
 import { EXERCISES } from '../../program/exercises';
+import { KB_ROUNDS, WARMUP_ROUNDS } from '../../program/routines';
 import type { TapStep } from '../../program/types';
 import { routineFor } from '../../progress/session';
 import { MissingSession } from '../components/MissingSession';
@@ -113,8 +114,8 @@ function KbRun({ session }: { session: SessionRecord }) {
   const top =
     step.kind === 'tap'
       ? step.block === 'warmup'
-        ? `Warm-up · round ${step.round} of 2`
-        : `Circuit · round ${step.round} of 3`
+        ? `Warm-up · round ${step.round} of ${WARMUP_ROUNDS}`
+        : `Circuit · round ${step.round} of ${KB_ROUNDS}`
       : step.title;
 
   return (

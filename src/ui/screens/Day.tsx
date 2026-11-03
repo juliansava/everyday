@@ -1,5 +1,6 @@
 import type { SessionRecord, SetRecord } from '../../model';
 import { EXERCISES } from '../../program/exercises';
+import { WARMUP_ROUNDS } from '../../program/routines';
 import type { ExerciseId } from '../../program/types';
 import { Header } from '../components/Header';
 import { useData } from '../data';
@@ -20,7 +21,7 @@ function KbDetail({ sets }: { sets: SetRecord[] }) {
   const warmupRounds = new Set(sets.filter((s) => s.block === 'warmup').map((s) => s.round)).size;
   return (
     <>
-      <p class="small muted">Warm-up: {warmupRounds} of 2 rounds</p>
+      <p class="small muted">Warm-up: {warmupRounds} of {WARMUP_ROUNDS} rounds</p>
       {order.map((id) => {
         const rows = circuit.filter((s) => s.exerciseId === id);
         return (
